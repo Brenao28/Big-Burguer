@@ -66,8 +66,12 @@
             <div class="card card-delivery">
                 <h3>🛵 DELIVERY / RETIRADA</h3>
                 <div class="input-group">
-                    <label>Soma Relatórios (Web + Bundi):</label>
-                    <input type="number" id="vendaSistDeliv" step="0.01">
+                    <label>Relatório Web Cardápio (Delivery):</label>
+                    <input type="number" id="vendaWebDeliv" step="0.01" placeholder="0.00">
+                </div>
+                <div class="input-group">
+                    <label>Relatório App Bundi:</label>
+                    <input type="number" id="vendaBundiDeliv" step="0.01" placeholder="0.00">
                 </div>
                 <hr>
                 <div class="input-group">
@@ -129,7 +133,8 @@
         const difSalao = realSalao - sistSalao;
 
         // --- CÁLCULO DELIVERY ---
-        const sistDeliv = Number(document.getElementById('vendaSistDeliv').value);
+        const sistDeliv = Number(document.getElementById('vendaWebDeliv').value) + 
+                  Number(document.getElementById('vendaBundiDeliv').value);
         const maqRetirada = Number(document.getElementById('maqRetirada').value);
         
         let totalMaqEnt = 0;
