@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fechamento Analítico - Brenão</title>
+    <style>
+        :root { --salao: #2980b9; --delivery: #d35400; --bg: #f5f6fa; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); padding: 20px; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .grid-setores { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-top: 20px; }
+        .card { padding: 20px; border-radius: 10px; border: 1px solid #eee; }
+        .card-salao { border-top: 5px solid var(--salao); background: #f0f7ff; }
+        .card-delivery { border-top: 5px solid var(--delivery); background: #fff5f0; }
+        h2 { text-align: center; color: #2c3e50; margin-bottom: 30px; }
+        h3 { margin-top: 0; display: flex; justify-content: space-between; }
+        .input-group { margin-bottom: 12px; }
+        label { font-size: 13px; font-weight: bold; color: #555; }
+        input { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        .btn { cursor: pointer; border: none; border-radius: 6px; font-weight: bold; transition: 0.3s; }
+        .btn-setup { background: #34495e; color: white; padding: 10px 20px; margin-top: 10px; }
+        .btn-final { background: #27ae60; color: white; padding: 18px; width: 100%; font-size: 18px; margin-top: 30px; }
+        #resultado { margin-top: 30px; display: none; padding: 25px; border-radius: 10px; }
+        .dif-positiva { border-left: 10px solid #27ae60; background: #e8f5e9; }
+        .dif-negativa { border-left: 10px solid #c0392b; background: #ffebee; }
+        .badge-entrega { background: var(--delivery); color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>📊 Fechamento de Caixa Analítico</h2>
+
+    <div id="setup" class="card" style="margin-bottom: 20px;">
+        <label>Quantos entregadores trabalharam?</label>
+        <div style="display:flex; gap:10px;">
+            <input type="number" id="qtdEntregadores" placeholder="Ex: 3">
+            <button class="btn btn-setup" onclick="configurarEntregadores()">Definir Equipe</button>
+        </div>
+        <div id="nomesArea"></div>
+    </div>
+
+    <div id="formularioPrincipal" style="display:none;">
+        <div class="grid-setores">
+            <div class="card card-salao">
+                <h3>🍽️ SALÃO</h3>
+                <div class="input-group">
+                    <label>Vendas no Relatório (Web Cardápio):</label>
+                    <input type="number" id="vendaSistSalao" step="0.01">
+                </div>
+                <hr>
+                <div class="input-group">
+                    <label>Caixa Inicial (Troco):</label>
+                    <input type="number" id="caixaInicial" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label>Maquininha Salão:</label>
+                    <input type="number" id="maqSalao" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label>Dinheiro Físico (Gaveta):</label>
+                    <input type="number" id="dinSalao" step="0.01">
+                </div>
+            </div>
+
+            <div class="card card-delivery">
+                <h3>🛵 DELIVERY / RETIRADA</h3>
+                <div class="input-group">
+                    <label>Soma Relatórios (Web + Bundi):</label>
+                    <input type="number" id="vendaSistDeliv" step="0.01">
+                </div>
+                <hr>
+                <div class="input-group">
+                    <label>Maquininha Retirada (Balcão):</label>
+                    <input type="number" id="maqRetirada" step="0.01">
+                </div>
+                <div id="listaEntregadoresDinamica">
+                    </div>
+            </div>
+        </div>
+
+        <button class="btn btn-final" onclick="gerarRelatorio()">CALCULAR FECHAMENTO SEPARADO</button>
+    </div>
+
+    <div id="resultado"></div>
+</div>
+
+<script>
+    let entregadores = [];
+
+    function configurarEntregadores() {
+        const qtd = document.getElementById('qtdEntregadores').value;
+        const area = document.getElementById('nomesArea');
+        area.innerHTML = '<br><label>Nomes dos Entregadores:</label>';
+        for(let i=0; i<qtd; i++) {
+            area.innerHTML += `<input type="text" class="nome-ent" placeholder="Nome ${i+1}" style="margin-bottom:5px;">`;
+        }
+        area.innerHTML += `<br><button class="btn btn-setup" onclick="confirmarNomes()">Confirmar e Abrir Caixa</button>`;
+    }
+
+    function confirmarNomes() {
+        const inputs = document.querySelectorAll('.nome-ent');
+        entregadores = Array.from(inputs).map(i => i.value || "Entregador");
+        
+        const areaDinamica = document.getElementById('listaEntregadoresDinamica');
+        areaDinamica.innerHTML = '<h4>Acerto dos Motoboys:</h4>';
+        
+        entregadores.forEach((nome, index) => {
+            areaDinamica.innerHTML += `
+                <div style="background:white; padding:10px; border-radius:8px; margin-bottom:10px; border: 1px solid #ddd;">
+                    <span class="badge-entrega">${nome}</span>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:5px; margin-top:5px;">
+                        <input type="number" class="e-qtd" placeholder="Entregas" data-idx="${index}">
+                        <input type="number" class="e-maq" placeholder="Máquina" data-idx="${index}">
+                        <input type="number" class="e-din" placeholder="Dinheiro" data-idx="${index}">
+                    </div>
+                </div>`;
+        });
+        
+        document.getElementById('formularioPrincipal').style.display = 'block';
+        document.getElementById('setup').style.display = 'none';
+    }
+
+    function gerarRelatorio() {
+        // --- CÁLCULO SALÃO ---
+        const sistSalao = Number(document.getElementById('vendaSistSalao').value);
+        const realSalao = (Number(document.getElementById('dinSalao').value) - Number(document.getElementById('caixaInicial').value)) + 
+                          Number(document.getElementById('maqSalao').value);
+        const difSalao = realSalao - sistSalao;
+
+        // --- CÁLCULO DELIVERY ---
+        const sistDeliv = Number(document.getElementById('vendaSistDeliv').value);
+        const maqRetirada = Number(document.getElementById('maqRetirada').value);
+        
+        let totalMaqEnt = 0;
+        let totalDinEnt = 0;
+        let totalEntregas = 0;
+        let htmlEntregadores = "";
+
+        const q = document.querySelectorAll('.e-qtd');
+        const m = document.querySelectorAll('.e-maq');
+        const d = document.querySelectorAll('.e-din');
+
+        entregadores.forEach((nome, i) => {
+            const qtd = Number(q[i].value);
+            const vM = Number(m[i].value);
+            const vD = Number(d[i].value);
+            
+            totalEntregas += qtd;
+            totalMaqEnt += vM;
+            totalDinEnt += vD;
+            htmlEntregadores += `<li>${nome}: ${qtd} ent. | R$ ${(vM + vD).toFixed(2)}</li>`;
+        });
+
+        const realDeliv = maqRetirada + totalMaqEnt + totalDinEnt;
+        const difDeliv = realDeliv - sistDeliv;
+
+        // --- EXIBIÇÃO ---
+        const resDiv = document.getElementById('resultado');
+        resDiv.style.display = 'block';
+        resDiv.className = (Math.abs(difSalao + difDeliv) < 1) ? 'dif-positiva' : 'dif-negativa';
+
+        resDiv.innerHTML = `
+            <h3>📋 Relatório de Diferenças Setoriais</h3>
+            <div class="grid-setores">
+                <div>
+                    <h4 style="color:var(--salao)">Setor Salão</h4>
+                    Esperado (Sist): R$ ${sistSalao.toFixed(2)}<br>
+                    Real em Mãos: R$ ${realSalao.toFixed(2)}<br>
+                    <strong>Diferença: R$ ${difSalao.toFixed(2)}</strong>
+                </div>
+                <div>
+                    <h4 style="color:var(--delivery)">Setor Delivery</h4>
+                    Esperado (Sist): R$ ${sistDeliv.toFixed(2)}<br>
+                    Real em Mãos: R$ ${realDeliv.toFixed(2)}<br>
+                    <strong>Diferença: R$ ${difDeliv.toFixed(2)}</strong>
+                </div>
+            </div>
+            <hr>
+            <h4>Resumo dos Entregadores (${totalEntregas} entregas totais):</h4>
+            <ul>${htmlEntregadores}</ul>
+            <hr>
+            <h2 style="margin:10px 0">Diferença Total: R$ ${(difSalao + difDeliv).toFixed(2)}</h2>
+        `;
+    }
+</script>
+
+</body>
+</html>
