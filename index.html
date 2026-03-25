@@ -397,7 +397,7 @@
         const sistDeliv = getValor('vendaWebDeliv') + getValor('vendaBundiDeliv');
         const maqRetirada = getValor('maqRetirada');
         
-        let totalMaqEnt = 0, totalDinEnt = 0, totalEntregas = 0, totalGasEnt = 0;
+        let totalMaqEnt = 0, totalDinEnt = 0, totalGasEnt = 0;
         let htmlEntregadores = "";
 
         const inputsQtd = document.querySelectorAll('.e-qtd');
@@ -412,7 +412,6 @@
             const vGas = Number(inputsGas[i].value) || 0;
             const totalInd = vMaq + vDin + vGas;
             
-            totalEntregas += qtd;
             totalMaqEnt += vMaq;
             totalDinEnt += vDin;
             totalGasEnt += vGas;
@@ -457,7 +456,6 @@
                 </div>
             </div>
             <hr>
-            <h4>📦 Acertos Motoboys (${totalEntregas} total):</h4>
             <ul class="lista-motoboys">${htmlEntregadores}</ul>
             <hr>
             <div class="res-final">
