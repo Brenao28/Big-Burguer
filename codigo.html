@@ -176,7 +176,7 @@
         color: #ffebee;
     }
     
-    .badge-entrega { background: var(--delivery); color: white; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; }
+    .badge-entrega { color: var(--delivery); font-size: 15px; font-weight: bold; }
     
     /* Ajuste de cor para textos dentro dos acertos dos motoboys */
     #listaEntregadoresDinamica label { color: #eee; }
@@ -275,12 +275,12 @@
         
         entregadores.forEach((nome, index) => {
             areaDinamica.innerHTML += `
-                <div style="background:rgba(255,255,255,0.8); padding:12px; border-radius:10px; margin-bottom:12px; border: 1px solid #ddd;">
-                    <span class="badge-entrega">🛵 ${nome}</span>
+                <div style="background:rgba(0, 0, 0, 0.4); padding:12px; border-radius:10px; margin-bottom:12px; border: 1px solid rgba(255, 255, 255, 0.5);">
+                    <span class="badge-entrega">🙋 ${nome}</span>
                     <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px; margin-top:8px;">
-                        <div><label style="font-size:10px">Qtd</label><input type="number" class="e-qtd" placeholder="0"></div>
-                        <div><label style="font-size:10px">💳 Maq</label><input type="number" class="e-maq" placeholder="0.00"></div>
-                        <div><label style="font-size:10px">💵 Din</label><input type="number" class="e-din" placeholder="0.00"></div>
+                        <div><label style="font-size:10px">🛵 Entregas</label><input type="number" class="e-qtd" placeholder="0"></div>
+                        <div><label style="font-size:10px">💳 Maquininha</label><input type="number" class="e-maq" placeholder="0.00"></div>
+                        <div><label style="font-size:10px">💵 Dinheiro</label><input type="number" class="e-din" placeholder="0.00"></div>
                     </div>
                 </div>`;
         });
@@ -325,7 +325,7 @@
             totalDinEnt += vD;
             htmlEntregadores += `
                 <li style="margin-bottom: 8px; list-style: none; padding: 8px; border-bottom: 1px dashed #bbb;">
-                    <strong>${nome}:</strong> <br> 🛵 ${qtd} entregas <br>
+                    <strong>🙋${nome}</strong> <br> 🛵 ${qtd} entregas <br>
                     <span>💳 Maquininha: R$ ${vM.toFixed(2)}</span> | <span>💵 Dinheiro: R$ ${vD.toFixed(2)}</span><br>
                     <span>💰 <strong>Total: R$ ${totalInd.toFixed(2)}</strong></span>
                 </li>`;
@@ -342,7 +342,7 @@
         resDiv.innerHTML = `
             <h3 style="text-align: center;">📋 RESULTADO DO FECHAMENTO</h3>
             <div class="grid-setores">
-                <div style="background: rgba(255,255,255,0.6); padding: 15px; border-radius: 10px;">
+                <div style="background: rgba(0, 0, 0, 0.4); padding: 15px; border-radius: 10px;">
                     <h4 style="color:var(--salao); margin-top:0;">🍽️ SALÃO</h4>
                     <p>Vendas (Esperado): R$ ${sistSalao.toFixed(2)}</p>
                     <p>Real (Recebido): R$ ${realSalao.toFixed(2)}</p>
@@ -350,7 +350,7 @@
                     <hr>
                     <p><strong>Diferença: R$ ${difSalao.toFixed(2)}</strong></p>
                 </div>
-                <div style="background: rgba(255,255,255,0.6); padding: 15px; border-radius: 10px;">
+                <div style="background: rgba(0, 0, 0, 0.4); padding: 15px; border-radius: 10px;">
                     <h4 style="color:var(--delivery); margin-top:0;">🛵 DELIVERY</h4>
                     <p>Vendas (Esperado): R$ ${sistDeliv.toFixed(2)}</p>
                     <p>Real (Recebido): R$ ${realDeliv.toFixed(2)}</p>
