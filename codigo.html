@@ -112,11 +112,13 @@
         box-sizing: border-box;
         background: rgba(0, 0, 0, 0.3);
         color: var(--text-color);
+        transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
     }
     input:focus {
         outline: none;
         border-color: var(--salao);
         background: rgba(0, 0, 0, 0.5);
+        box-shadow: 0 0 8px rgba(41, 128, 185, 0.4); /* Brilho azulado suave ao focar */
     }
 
     .btn { 
@@ -146,9 +148,11 @@
         font-size: 18px; 
         margin-top: 30px; 
         box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
     }
 
-    .btn-final:hover { background: #219150; opacity: 0.9; }
+    .btn-final:hover { background: #219150; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
+    .btn-final:active { transform: translateY(1px); box-shadow: 0 2px 10px rgba(0,0,0,0.3); } /* Efeito de clique afundando */
 
     #resultado { 
         margin-top: 30px; 
@@ -198,6 +202,13 @@
     .res-final { text-align: center; }
     .res-final h2 { margin: 10px 0; }
     .titulo-relatorio { text-align: center; }
+
+    /* --- ANIMAÇÕES PARA FLUIDEZ --- */
+    @keyframes slideUpFade {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .anima-fade { animation: slideUpFade 0.5s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; }
 </style>
 </head>
 <body>
@@ -310,7 +321,9 @@
         areaDinamica.innerHTML = html;
         
         document.getElementById('mainContainer').classList.remove('centering-setup');
-        document.getElementById('formularioPrincipal').style.display = 'block';
+        const formPrincipal = document.getElementById('formularioPrincipal');
+        formPrincipal.style.display = 'block';
+        formPrincipal.classList.add('anima-fade'); /* Aplica a animação suave de entrada */
         document.getElementById('setup').style.display = 'none';
     }
 
@@ -361,7 +374,8 @@
         // --- EXIBIÇÃO ---
         const resDiv = document.getElementById('resultado');
         resDiv.style.display = 'block';
-        resDiv.className = (Math.abs(difSalao + difDeliv) < 1) ? 'dif-positiva' : 'dif-negativa';
+        const classeBase = (Math.abs(difSalao + difDeliv) < 1) ? 'dif-positiva' : 'dif-negativa';
+        resDiv.className = `${classeBase} anima-fade`; /* Mantém a cor e adiciona a animação */
 
         resDiv.innerHTML = `
             <h3 class="titulo-relatorio">📋 RESULTADO DO FECHAMENTO</h3>
