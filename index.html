@@ -52,7 +52,7 @@
 
     .container { 
         max-width: 1000px; 
-        margin: auto; 
+        margin: 0 auto; 
         width: 100%;
         display: flex;
         contain: layout style paint; /* Isola a renderização do container */
@@ -71,7 +71,7 @@
 
     /* Ajuste para centralizar o menu de setup */
     .centering-setup {
-        margin-top: 15vh;
+        margin-top: 5vh;
         align-items: center;
         background: transparent;
         backdrop-filter: none;
@@ -245,7 +245,7 @@
             padding: 15px; /* Devolve espaço vital para os inputs não ficarem espremidos */
         }
         .centering-setup {
-            margin-top: 5vh; /* Evita que o teclado do celular cubra a tela inicial */
+            margin-top: 2vh; /* Evita que o teclado do celular cubra a tela inicial */
         }
         .grid-setores {
             grid-template-columns: 1fr; /* Coloca Salão e Delivery um embaixo do outro */
@@ -271,13 +271,13 @@
 </head>
 <body>
 
-<div class="container centering-setup" id="mainContainer">
-    <div style="text-align: center; margin-bottom: 10px;">
-        <img src="img/logo.png" 
-            alt="Logo Big Pizza & Burguer" 
-            style="max-width: 280px; height: auto; filter: drop-shadow(0px 4px 8px rgba(0,0,0,0.5));">
-    </div>
+<div id="logoTopo" style="align-self: flex-start; margin-bottom: 20px; margin-left: -10px; margin-top: -10px;">
+    <img src="img/logo.png" 
+        alt="Logo Big Pizza & Burguer" 
+        style="max-width: 180px; height: auto; filter: drop-shadow(0px 4px 8px rgba(0,0,0,0.5));">
+</div>
 
+<div class="container centering-setup" id="mainContainer">
     <div id="setup" class="card">
         <label>Quantos entregadores trabalharam hoje?</label>
         <div class="flex-col-center">
@@ -387,6 +387,7 @@
         formPrincipal.style.display = 'block';
         formPrincipal.classList.add('anima-fade'); /* Aplica a animação suave de entrada */
         document.getElementById('setup').style.display = 'none';
+        document.getElementById('logoTopo').style.display = 'none';
     }
 
     function gerarRelatorio() {
@@ -452,7 +453,7 @@
                     <p><strong>Diferença: R$ ${difSalao.toFixed(2)}</strong></p>
                 </div>
                 <div class="card-resultado">
-                    <h4 class="tit-delivery">🛵 DELIVERY</h4>
+                    <h4 class="tit-delivery">🛵 DELIVERY/RETIRADA</h4>
                     <p>📈 Vendas (Esperado): R$ ${sistDeliv.toFixed(2)}</p>
                     <p>💵 Real (Recebido): R$ ${(maqRetirada + totalMaqEnt + totalDinEnt).toFixed(2)}</p>
                     <p>⛽ Gasto Combustível: + R$ ${totalGasEnt.toFixed(2)}</p>
