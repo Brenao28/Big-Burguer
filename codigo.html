@@ -18,6 +18,10 @@
         --text-color: #fff;
     }
 
+    html {
+        scroll-behavior: smooth; /* Deixa a rolagem nativa da página mais suave */
+    }
+
     body { 
         font-family: 'Segoe UI', sans-serif; 
         margin: 0;
@@ -26,15 +30,22 @@
         display: flex;
         flex-direction: column;
         color: var(--text-color);
-        
-        /* CONFIGURAÇÃO DO FUNDO */
-        /* 1. Cor sólida de segurança (caso a imagem não carregue) */
+    }
+
+    /* TRUQUE DE PERFORMANCE: Fundo fixo em uma camada isolada (GPU) */
+    body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: -1;
         background-color: #2c3e50; 
-        /* 2. Película + Imagem (Ajuste o caminho se necessário) */
         background-image: linear-gradient(var(--bg-overlay), var(--bg-overlay)), url('img/background.jpg'); 
         background-size: cover;
-        background-attachment: fixed;
         background-position: center;
+        will-change: transform; /* Avisa o navegador para usar aceleração de hardware */
     }
 
     .container { 
@@ -60,7 +71,6 @@
     .centering-setup {
         margin-top: 15vh;
         align-items: center;
-        /* Remove o fundo do container pai quando estiver centralizado para não duplicar o blur */
         background: transparent;
         backdrop-filter: none;
         -webkit-backdrop-filter: none;
@@ -77,7 +87,6 @@
         width: 100%;
         box-sizing: border-box;
 }
-    /* Mantém o fundo do setup visível quando centralizado */
     #setup.card {
         background: rgba(0, 0, 0, 0.5);
         max-width: 500px;
@@ -119,6 +128,16 @@
         border-color: var(--salao);
         background: rgba(0, 0, 0, 0.5);
         box-shadow: 0 0 8px rgba(41, 128, 185, 0.4); /* Brilho azulado suave ao focar */
+    }
+
+    /* Remove as setinhas dos inputs do tipo number */
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { 
+        -webkit-appearance: none; 
+        margin: 0; 
+    }
+    input[type=number] {
+        -moz-appearance: textfield; /* Para o Firefox */
     }
 
     .btn { 
@@ -219,7 +238,7 @@
     <div id="setup" class="card">
         <label>Quantos entregadores trabalharam hoje?</label>
         <div class="flex-col-center">
-            <input type="number" id="qtdEntregadores" placeholder="Ex: 3" class="input-qtd-setup">
+            <input type="number" id="qtdEntregadores" class="input-qtd-setup">
             <button class="btn btn-setup" onclick="configurarEntregadores()">Definir Equipe</button>
         </div>
         <div id="nomesArea"></div>
@@ -248,7 +267,7 @@
                 </div>
                 <div class="input-group">
                     <label>🍔 Excedente de Lanches (Funcionários):</label>
-                    <input type="number" id="excedenteLanche" step="0.01" placeholder="0.00">
+                    <input type="number" id="excedenteLanche" step="0.01">
                 </div>
             </div>
 
@@ -291,7 +310,7 @@
         let html = '<br><label>Nomes dos Entregadores:</label>';
         
         for(let i=0; i<qtd; i++) {
-            html += `<input type="text" class="nome-ent input-nome" placeholder="Nome ${i+1}">`;
+            html += `<input type="text" class="nome-ent input-nome">`;
         }
         html += `<br><button class="btn btn-setup btn-confirm" onclick="confirmarNomes()">Confirmar e Abrir Caixa</button>`;
         
