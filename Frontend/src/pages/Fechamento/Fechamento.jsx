@@ -104,6 +104,7 @@ const Fechamento = () => {
   const [copiando, setCopiando] = useState(false);
   const [copiado, setCopiado] = useState(false);
   const resultadoRef = useRef(null);
+  const conteudoRef = useRef(null);
 
   const handleMotoboyChange = (index, campo, valor) => {
     setDadosMotoboys(prev => {
@@ -141,7 +142,7 @@ const Fechamento = () => {
   };
 
   const copiarComoImagem = async () => {
-    const elemento = resultadoRef.current;
+    const elemento = conteudoRef.current;
     if (!elemento) return;
     setCopiando(true);
     try {
@@ -308,62 +309,67 @@ const Fechamento = () => {
 
         {etapa === 'resultado' && relatorio && (
           <div ref={resultadoRef} className="anima-fade" style={{ width: '100%' }}>
-            <div className={`resultado-banner ${positivo ? 'banner--ok' : 'banner--alerta'}`}>
-              <span className="banner-icon">{positivo ? <IconCheck /> : <IconAlert />}</span>
-              <div className="banner-info">
-                <p className="banner-titulo">{positivo ? 'Caixa fechado!' : 'Divergência encontrada'}</p>
-                <p className="banner-sub">{positivo ? 'Tudo confere.' : 'Verifique os valores abaixo.'}</p>
-                <p className="banner-data">{relatorio.dataFechamento}</p>
+
+            {/* Apenas esta div é capturada na imagem */}
+            <div ref={conteudoRef} style={{ padding: '16px', background: '#0f172a', borderRadius: '14px' }}>
+              <div className={`resultado-banner ${positivo ? 'banner--ok' : 'banner--alerta'}`}>
+                <span className="banner-icon">{positivo ? <IconCheck /> : <IconAlert />}</span>
+                <div className="banner-info">
+                  <p className="banner-titulo">{positivo ? 'Caixa fechado!' : 'Divergência encontrada'}</p>
+                  <p className="banner-sub">{positivo ? 'Tudo confere.' : 'Verifique os valores abaixo.'}</p>
+                  <p className="banner-data">{relatorio.dataFechamento}</p>
+                </div>
+                <span className={`banner-valor ${positivo ? 'val--ok' : 'val--alerta'}`}>
+                  R$ {relatorio.totalGeral.toFixed(2)}
+                </span>
               </div>
-              <span className={`banner-valor ${positivo ? 'val--ok' : 'val--alerta'}`}>
-                R$ {relatorio.totalGeral.toFixed(2)}
-              </span>
+
+              <div className="fc-grid" style={{ marginTop: 16 }}>
+                <div className="fc-card fc-card--salao">
+                  <div className="setor-header setor-header--salao">
+                    <span className="setor-icon"><IconStore /></span>
+                    <span className="setor-title">Salão</span>
+                  </div>
+                  <div className="resumo-block">
+                    <ResumoRow label="Esperado (sistema)" value={relatorio.sistSalao} />
+                    <ResumoRow label="Realizado (caixa)" value={relatorio.realSalao} />
+                    <ResumoRow label="Excedente funcionários" value={relatorio.excedente} sub />
+                    <div className="resumo-divider" />
+                    <ResumoRow label="Diferença" value={relatorio.difSalao} accent />
+                  </div>
+                </div>
+
+                <div className="fc-card fc-card--delivery">
+                  <div className="setor-header setor-header--delivery">
+                    <span className="setor-icon"><IconBike /></span>
+                    <span className="setor-title">Delivery</span>
+                  </div>
+                  <div className="resumo-block">
+                    <ResumoRow label="Esperado (sistema)" value={relatorio.sistDeliv} />
+                    <ResumoRow label="Realizado (líquido)" value={relatorio.realDelivLiq} />
+                    <ResumoRow label="Gasolina adicionada" value={relatorio.totalGasEnt} sub />
+                    <div className="resumo-divider" />
+                    <ResumoRow label="Diferença" value={relatorio.difDeliv} accent />
+                  </div>
+                  {relatorio.motoboys.length > 0 && (
+                    <>
+                      <div className="section-divider" style={{ margin: '16px 0' }} />
+                      <p className="section-label">Por motoboy</p>
+                      {relatorio.motoboys.map((m, i) => (
+                        <div key={i} className="motoboy-resumo">
+                          <div className="motoboy-avatar sm">{m.nome.charAt(0).toUpperCase()}</div>
+                          <span className="motoboy-nome">{m.nome}</span>
+                          <span className="motoboy-qtd">{m.qtd} entregas</span>
+                          <span className="motoboy-total">R$ {(m.maq + m.din + m.gas).toFixed(2)}</span>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
 
-            <div className="fc-grid" style={{ marginTop: 16 }}>
-              <div className="fc-card fc-card--salao">
-                <div className="setor-header setor-header--salao">
-                  <span className="setor-icon"><IconStore /></span>
-                  <span className="setor-title">Salão</span>
-                </div>
-                <div className="resumo-block">
-                  <ResumoRow label="Esperado (sistema)" value={relatorio.sistSalao} />
-                  <ResumoRow label="Realizado (caixa)" value={relatorio.realSalao} />
-                  <ResumoRow label="Excedente funcionários" value={relatorio.excedente} sub />
-                  <div className="resumo-divider" />
-                  <ResumoRow label="Diferença" value={relatorio.difSalao} accent />
-                </div>
-              </div>
-
-              <div className="fc-card fc-card--delivery">
-                <div className="setor-header setor-header--delivery">
-                  <span className="setor-icon"><IconBike /></span>
-                  <span className="setor-title">Delivery</span>
-                </div>
-                <div className="resumo-block">
-                  <ResumoRow label="Esperado (sistema)" value={relatorio.sistDeliv} />
-                  <ResumoRow label="Realizado (líquido)" value={relatorio.realDelivLiq} />
-                  <ResumoRow label="Gasolina adicionada" value={relatorio.totalGasEnt} sub />
-                  <div className="resumo-divider" />
-                  <ResumoRow label="Diferença" value={relatorio.difDeliv} accent />
-                </div>
-                {relatorio.motoboys.length > 0 && (
-                  <>
-                    <div className="section-divider" style={{ margin: '16px 0' }} />
-                    <p className="section-label">Por motoboy</p>
-                    {relatorio.motoboys.map((m, i) => (
-                      <div key={i} className="motoboy-resumo">
-                        <div className="motoboy-avatar sm">{m.nome.charAt(0).toUpperCase()}</div>
-                        <span className="motoboy-nome">{m.nome}</span>
-                        <span className="motoboy-qtd">{m.qtd} entregas</span>
-                        <span className="motoboy-total">R$ {(m.maq + m.din + m.gas).toFixed(2)}</span>
-                      </div>
-                    ))}
-                  </>
-                )}
-              </div>
-            </div>
-
+            {/* Botões fora da captura */}
             <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 24, flexWrap: 'wrap' }}>
               <button className="btn btn-ghost btn-icon" onClick={() => setEtapa('formulario')}>
                 ← Voltar e editar
@@ -379,6 +385,7 @@ const Fechamento = () => {
                 <IconRefresh /> Novo fechamento
               </button>
             </div>
+
           </div>
         )}
 
