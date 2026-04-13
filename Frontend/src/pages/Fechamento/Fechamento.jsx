@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import "./fechamento.css";
 import logo from '/img/logo.png';
+import html2canvas from 'html2canvas';
 
 const IconStore = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -26,6 +27,12 @@ const IconAlert = () => (
 const IconRefresh = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.65"/>
+  </svg>
+);
+const IconCamera = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+    <circle cx="12" cy="13" r="4"/>
   </svg>
 );
 
@@ -85,6 +92,8 @@ const Fechamento = () => {
     { nome: 'Entregador 1', qtd: 0, maq: 0, din: 0, gas: 0 }
   ]);
   const [relatorio, setRelatorio] = useState(null);
+  const [copiando, setCopiando] = useState(false);
+  const [copiado, setCopiado] = useState(false);
   const resultadoRef = useRef(null);
 
   const handleMotoboyChange = (index, campo, valor) => {
@@ -119,6 +128,41 @@ const Fechamento = () => {
       motoboys: dadosMotoboys,
     });
     setEtapa('resultado');
+  };
+
+  const copiarComoImagem = async () => {
+    const elemento = resultadoRef.current;
+    if (!elemento) return;
+    setCopiando(true);
+    try {
+      const canvas = await html2canvas(elemento, {
+        backgroundColor: '#0f172a',
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
+      canvas.toBlob(async (blob) => {
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob })
+          ]);
+          setCopiado(true);
+          setTimeout(() => setCopiado(false), 3000);
+        } catch {
+          // fallback: baixar a imagem
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'fechamento.png';
+          a.click();
+          URL.revokeObjectURL(url);
+        } finally {
+          setCopiando(false);
+        }
+      });
+    } catch {
+      setCopiando(false);
+    }
   };
 
   useEffect(() => {
@@ -181,7 +225,7 @@ const Fechamento = () => {
                   <p className="section-label">Vendas online</p>
                   <Field label="Web Cardápio" value={delivery.vendaWeb}
                     onChange={e => setDelivery({ ...delivery, vendaWeb: Number(e.target.value) })} />
-                  <Field label="App Bundi" value={delivery.vendaBundi}
+                  <Field label="App Brendi" value={delivery.vendaBundi}
                     onChange={e => setDelivery({ ...delivery, vendaBundi: Number(e.target.value) })} />
                 </div>
                 <div className="section-divider" />
@@ -310,9 +354,22 @@ const Fechamento = () => {
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 24 }}>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 24, flexWrap: 'wrap' }}>
               <button className="btn btn-ghost btn-icon" onClick={() => setEtapa('formulario')}>
                 ← Voltar e editar
+              </button>
+              <button
+                className={`btn btn-icon ${copiado ? 'btn-copiado' : 'btn-copiar'}`}
+                onClick={copiarComoImagem}
+                disabled={copiando}
+              >
+                {copiando ? (
+                  <>⏳ Gerando imagem...</>
+                ) : copiado ? (
+                  <><IconCheck /> Copiado!</>
+                ) : (
+                  <><IconCamera /> Copiar para WhatsApp</>
+                )}
               </button>
               <button className="btn btn-ghost btn-icon" onClick={() => window.location.reload()}>
                 <IconRefresh /> Novo fechamento

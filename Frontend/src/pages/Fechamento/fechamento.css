@@ -652,6 +652,18 @@ input[type=number] { -moz-appearance: textfield; appearance: textfield; }
 
 .anima-fade { animation: slideUp 0.35s cubic-bezier(0.25, 0.8, 0.25, 1) both; }
 
+/* ===== BOTÃO COPIAR ===== */
+.btn-copiar {
+  background: #25D366;
+  color: #022c22;
+}
+.btn-copiar:hover { opacity: 0.88; }
+
+.btn-copiado {
+  background: var(--success);
+  color: #022c22;
+}
+
 /* ===== RESPONSIVO ===== */
 @media (max-width: 680px) {
     .fc-header { flex-direction: column; align-items: flex-start; }
