@@ -84,6 +84,15 @@ const ResumoRow = ({ label, value, accent, sub }) => (
   </div>
 );
 
+const obterDataFechamento = () => {
+  const agora = new Date();
+  const hora = agora.getHours();
+  const data = hora < 17 ? new Date(agora.setDate(agora.getDate() - 1)) : agora;
+  return data.toLocaleDateString('pt-BR', {
+    weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric'
+  });
+};
+
 const Fechamento = () => {
   const [etapa, setEtapa] = useState('formulario');
   const [salao, setSalao] = useState({ vendaSist: 0, inicial: 0, maq: 0, din: 0, excedente: 0 });
@@ -126,6 +135,7 @@ const Fechamento = () => {
       difDeliv,
       totalGeral: difSalao + difDeliv,
       motoboys: dadosMotoboys,
+      dataFechamento: obterDataFechamento(),
     });
     setEtapa('resultado');
   };
@@ -149,7 +159,6 @@ const Fechamento = () => {
           setCopiado(true);
           setTimeout(() => setCopiado(false), 3000);
         } catch {
-          // fallback: baixar a imagem
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
@@ -301,9 +310,10 @@ const Fechamento = () => {
           <div ref={resultadoRef} className="anima-fade" style={{ width: '100%' }}>
             <div className={`resultado-banner ${positivo ? 'banner--ok' : 'banner--alerta'}`}>
               <span className="banner-icon">{positivo ? <IconCheck /> : <IconAlert />}</span>
-              <div>
+              <div className="banner-info">
                 <p className="banner-titulo">{positivo ? 'Caixa fechado!' : 'Divergência encontrada'}</p>
                 <p className="banner-sub">{positivo ? 'Tudo confere.' : 'Verifique os valores abaixo.'}</p>
+                <p className="banner-data">{relatorio.dataFechamento}</p>
               </div>
               <span className={`banner-valor ${positivo ? 'val--ok' : 'val--alerta'}`}>
                 R$ {relatorio.totalGeral.toFixed(2)}
@@ -363,13 +373,7 @@ const Fechamento = () => {
                 onClick={copiarComoImagem}
                 disabled={copiando}
               >
-                {copiando ? (
-                  <>⏳ Gerando imagem...</>
-                ) : copiado ? (
-                  <><IconCheck /> Copiado!</>
-                ) : (
-                  <><IconCamera /> Copiar para WhatsApp</>
-                )}
+                {copiando ? <>⏳ Gerando imagem...</> : copiado ? <><IconCheck /> Copiado!</> : <><IconCamera /> Copiar para WhatsApp</>}
               </button>
               <button className="btn btn-ghost btn-icon" onClick={() => window.location.reload()}>
                 <IconRefresh /> Novo fechamento

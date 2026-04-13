@@ -469,6 +469,21 @@ input[type=number] { -moz-appearance: textfield; appearance: textfield; }
     align-items: center;
     gap: 14px;
     border: 1px solid;
+    flex-wrap: wrap;
+}
+
+.banner-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.banner-data {
+    font-size: 0.72rem;
+    color: var(--subtle);
+    text-transform: capitalize;
+    letter-spacing: 0.02em;
+    margin: 0;
 }
 
 .banner--ok {
