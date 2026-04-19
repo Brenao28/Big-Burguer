@@ -8,30 +8,32 @@ const corsHeaders = {
 }
 
 serve(async (req: Request) => {
+  // Preflight CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
-  // ── Lê secrets DENTRO do handler (mais confiável no Deno) ──────────
+  // Lê secrets DENTRO do handler (obrigatório no Deno Edge)
   const MP_ACCESS_TOKEN = Deno.env.get('MP_ACCESS_TOKEN')
   const BASE_URL        = Deno.env.get('APP_BASE_URL')
+  const SUPABASE_URL    = Deno.env.get('SUPABASE_URL')
 
-  // Log para diagnóstico — aparece no painel Supabase → Functions → Logs
+  console.log('[criar-preferencia-mp] boot OK')
   console.log('MP_ACCESS_TOKEN presente:', !!MP_ACCESS_TOKEN)
   console.log('APP_BASE_URL:', BASE_URL)
 
   if (!MP_ACCESS_TOKEN) {
-    console.error('ERRO: MP_ACCESS_TOKEN não encontrado nos secrets')
+    console.error('ERRO: MP_ACCESS_TOKEN ausente')
     return new Response(
-      JSON.stringify({ error: 'Configuração de pagamento ausente. Contate o suporte.' }),
+      JSON.stringify({ error: 'MP_ACCESS_TOKEN não configurado nos secrets do Supabase.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
 
   if (!BASE_URL) {
-    console.error('ERRO: APP_BASE_URL não encontrado nos secrets')
+    console.error('ERRO: APP_BASE_URL ausente')
     return new Response(
-      JSON.stringify({ error: 'Configuração de URL ausente. Contate o suporte.' }),
+      JSON.stringify({ error: 'APP_BASE_URL não configurado nos secrets do Supabase.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
@@ -49,6 +51,7 @@ serve(async (req: Request) => {
       )
     }
 
+    // URLs de retorno — aponta para mp-redirect.html que redireciona para o hash correto
     const successUrl = `${BASE_URL}/mp-redirect.html?mp_status=approved&external_reference=${userId}`
     const failureUrl = `${BASE_URL}/mp-redirect.html?mp_status=failure&external_reference=${userId}`
     const pendingUrl = `${BASE_URL}/mp-redirect.html?mp_status=pending&external_reference=${userId}`
@@ -67,7 +70,7 @@ serve(async (req: Request) => {
         },
       ],
       payer: {
-        email: userEmail ?? undefined,
+        ...(userEmail ? { email: userEmail } : {}),
       },
       back_urls: {
         success: successUrl,
@@ -81,11 +84,11 @@ serve(async (req: Request) => {
       payment_methods: {
         installments: 1,
       },
-      notification_url:     `${Deno.env.get('SUPABASE_URL')}/functions/v1/mp-webhook`,
+      notification_url:     `${SUPABASE_URL}/functions/v1/mp-webhook`,
       statement_descriptor: 'BIGBURGUER PRO',
     }
 
-    console.log('Enviando preferência para Mercado Pago...')
+    console.log('Chamando API do Mercado Pago...')
 
     const resposta = await fetch('https://api.mercadopago.com/checkout/preferences', {
       method:  'POST',
@@ -97,8 +100,8 @@ serve(async (req: Request) => {
     })
 
     const dados = await resposta.json()
-    console.log('Resposta MP status:', resposta.status)
-    console.log('Resposta MP body:', JSON.stringify(dados))
+    console.log('MP status HTTP:', resposta.status)
+    console.log('MP resposta:', JSON.stringify(dados))
 
     if (!resposta.ok) {
       throw new Error(`Mercado Pago erro ${resposta.status}: ${JSON.stringify(dados)}`)
@@ -114,7 +117,7 @@ serve(async (req: Request) => {
     )
 
   } catch (err) {
-    console.error('ERRO na função:', err.message)
+    console.error('ERRO GERAL:', err.message)
     return new Response(
       JSON.stringify({ error: err.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
