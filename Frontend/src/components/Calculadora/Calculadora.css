@@ -4,7 +4,7 @@
   position: fixed;
   right: 20px;
   bottom: 20px;
-  width: 360px;
+  width: 320px;
   max-height: min(calc(100vh - 100px), 720px);
   overflow: hidden;
   background: rgba(15, 23, 42, 0.88);
