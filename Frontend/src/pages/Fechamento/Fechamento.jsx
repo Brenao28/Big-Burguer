@@ -55,8 +55,20 @@ function dataReferencia() {
 
 // ── Estado inicial ────────────────────────────────────────────
 const SALAO_VAZIO    = { vendaSist: 0, inicial: 0, maq: 0, din: 0, excedente: 0, vendaRetirada: 0, pixRetirada: 0, maqRetirada: 0 };
-const DELIVERY_VAZIO = { vendaWeb: 0, pixWeb: 0, vendaBundi: 0 };
+const DELIVERY_VAZIO = { vendaWeb: 0, pixWeb: 0, vendaBundiA: 0, pixBundiA: 0, vendaBundiB: 0, pixBundiB: 0 };
 const MOTOBOY_NOVO   = (n) => ({ nome: `Entregador ${n}`, qtd: 0, maq: 0, din: 0, gas: 0 });
+
+// ── Persistência de sessão ────────────────────────────────────
+const STORAGE_KEY = 'fechamento_rascunho';
+function salvarRascunho(data) {
+  try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
+}
+function carregarRascunho() {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
 
 // ── Campo monetário ───────────────────────────────────────────
 function Campo({ label, hint, value, onChange, erro }) {
@@ -159,11 +171,15 @@ function Modal({ titulo, mensagem, onConfirmar, onCancelar }) {
 export default function Fechamento() {
   const { user } = useAuth();
 
+  // Carrega rascunho salvo (evita reset ao Alt+Tab)
+  const rascunho = carregarRascunho();
+
   const [etapa,        setEtapa]        = useState('formulario');
   const [aba,          setAba]          = useState('salao');
-  const [salao,        setSalao]        = useState(SALAO_VAZIO);
-  const [delivery,     setDelivery]     = useState(DELIVERY_VAZIO);
-  const [motoboys,     setMotoboys]     = useState([MOTOBOY_NOVO(1)]);
+  const [salao,        setSalao]        = useState(rascunho?.salao    || SALAO_VAZIO);
+  const [delivery,     setDelivery]     = useState(rascunho?.delivery || DELIVERY_VAZIO);
+  const [motoboys,     setMotoboys]     = useState(rascunho?.motoboys || [MOTOBOY_NOVO(1)]);
+  const [brendiAtivo,  setBrendiAtivo]  = useState('A'); // 'A' = Açaí | 'B' = Pizza/Hamburguer
   const [relatorio,    setRelatorio]    = useState(null);
   const [erros,        setErros]        = useState({});
   const [salvando,     setSalvando]     = useState(false);
@@ -178,9 +194,10 @@ export default function Fechamento() {
 
   // Subtotais para o toggle
   const subtotais = {
-    salao:    salao.maq + Math.max(0, salao.din - salao.inicial) + (salao.vendaRetirada - salao.pixRetirada),
-    delivery: delivery.vendaWeb + delivery.vendaBundi
-              + motoboys.reduce((s, m) => s + m.maq + m.din, 0),
+    salao:    salao.maq + salao.maqRetirada + Math.max(0, salao.din - salao.inicial) + salao.excedente,
+    delivery: (delivery.vendaWeb - delivery.pixWeb)
+            + (delivery.vendaBundiA - delivery.pixBundiA)
+            + (delivery.vendaBundiB - delivery.pixBundiB),
   };
 
   // Scroll ao resultado
@@ -189,6 +206,13 @@ export default function Fechamento() {
       setTimeout(() => resultadoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
     }
   }, [etapa]);
+
+  // Auto-salvar rascunho no sessionStorage
+  useEffect(() => {
+    if (etapa === 'formulario') {
+      salvarRascunho({ salao, delivery, motoboys });
+    }
+  }, [salao, delivery, motoboys, etapa]);
 
   // Swipe mobile entre abas
   function onTouchStart(e) { toque.current = e.touches[0].clientX; }
@@ -218,7 +242,7 @@ export default function Fechamento() {
     const e = {};
     if (!salao.vendaSist || salao.vendaSist <= 0)
       e.vendaSist = 'Informe as vendas do salão';
-    if (delivery.vendaWeb + delivery.vendaBundi <= 0)
+    if (delivery.vendaWeb + delivery.vendaBundiA + delivery.vendaBundiB <= 0)
       e.vendaDelivery = 'Informe ao menos uma venda de delivery';
     setErros(e);
     return Object.keys(e).length === 0;
@@ -228,31 +252,41 @@ export default function Fechamento() {
   async function calcular() {
     if (!validar()) return;
 
+    // ── Salão ──
     const pixRetiradaAuto  = salao.vendaRetirada - salao.pixRetirada;
     const totalVendasSalao = salao.vendaSist + pixRetiradaAuto;
     const realSalao        = (salao.din - salao.inicial) + salao.maq + salao.maqRetirada + salao.excedente;
     const difSalao         = realSalao - totalVendasSalao;
-    const sistDeliv        = delivery.vendaWeb + delivery.vendaBundi;
-    const pixWebAuto       = delivery.vendaWeb - delivery.pixWeb;
-    const totalMaq         = motoboys.reduce((s, m) => s + m.maq, 0);
-    const totalDin         = motoboys.reduce((s, m) => s + m.din, 0);
-    const totalGas         = motoboys.reduce((s, m) => s + m.gas, 0);
-    const realDelivLiq     = totalMaq + totalDin;
-    const difDeliv         = (realDelivLiq + totalGas) - sistDeliv;
+
+    // ── Delivery ──
+    const pixWebAuto    = delivery.vendaWeb   - delivery.pixWeb;    // web sem pix auto
+    const pixBundiAAuto = delivery.vendaBundiA - delivery.pixBundiA; // açaí sem pix auto
+    const pixBundiBAuto = delivery.vendaBundiB - delivery.pixBundiB; // pizza sem pix auto
+    const sistDeliv     = pixWebAuto + pixBundiAAuto + pixBundiBAuto; // total esperado
+
+    const totalMaq      = motoboys.reduce((s, m) => s + m.maq, 0);
+    const totalDin      = motoboys.reduce((s, m) => s + m.din, 0);
+    const totalGas      = motoboys.reduce((s, m) => s + m.gas, 0);
+    const realDelivLiq  = totalMaq + totalDin + totalGas;            // total recebido
+    const difDeliv      = realDelivLiq - sistDeliv;
 
     const dados = {
+      // Salão
       sistSalao: salao.vendaSist, realSalao, excedente: salao.excedente, difSalao,
-      totalVendasSalao,
-      vendaRetirada: salao.vendaRetirada, pixRetirada: salao.pixRetirada, pixRetiradaAuto,
+      totalVendasSalao, pixRetiradaAuto,
+      vendaRetirada: salao.vendaRetirada, pixRetirada: salao.pixRetirada,
       maqRetirada: salao.maqRetirada,
+      // Delivery
+      vendaWeb: delivery.vendaWeb, pixWeb: delivery.pixWeb, pixWebAuto,
+      vendaBundiA: delivery.vendaBundiA, pixBundiA: delivery.pixBundiA, pixBundiAAuto,
+      vendaBundiB: delivery.vendaBundiB, pixBundiB: delivery.pixBundiB, pixBundiBAuto,
       sistDeliv, realDelivLiq, totalGasEnt: totalGas, difDeliv,
-      pixWebAuto, vendaWeb: delivery.vendaWeb, pixWeb: delivery.pixWeb,
+      // Geral
       totalGeral: difSalao + difDeliv,
       dataFechamento: dataReferencia(),
       motoboys,
       // Campos originais para salvar no banco
       trocoInicial: salao.inicial, maqSalao: salao.maq, dinheiroGaveta: salao.din,
-      vendaBundi: delivery.vendaBundi,
     };
 
     setRelatorio(dados);
@@ -297,6 +331,7 @@ export default function Fechamento() {
     setMotoboys([MOTOBOY_NOVO(1)]); setRelatorio(null);
     setErros({}); setEtapa('formulario'); setAba('salao');
     setConfirmarNovo(false); setErroSalvar('');
+    try { sessionStorage.removeItem(STORAGE_KEY); } catch {}
   }
 
   const positivo = relatorio && Math.abs(relatorio.totalGeral) < 1;
@@ -378,21 +413,61 @@ export default function Fechamento() {
                 <div className="fc-slide">
                   <div className="fc-card fc-card--delivery">
                     <div className="fc-card-header fc-card-header--delivery">
-                      <IconBike /> Delivery / Retirada
+                      <IconBike /> Delivery
                     </div>
 
                     <div className="fc-secao">
-                      <span className="fc-secao-label">Vendas online</span>
-                      <Campo label="Web Cardápio — Valor total de venda" value={delivery.vendaWeb} erro={erros.vendaDelivery}
+                      <span className="fc-secao-label">Web Cardápio</span>
+                      <Campo label="Valor total de venda" value={delivery.vendaWeb} erro={erros.vendaDelivery}
                         onChange={v => { setDelivery(d => ({ ...d, vendaWeb: v })); setErros(e => ({ ...e, vendaDelivery: null })); }} />
-                      <Campo label="Web Cardápio — Valor pix" value={delivery.pixWeb}
+                      <Campo label="Valor em pix automático" value={delivery.pixWeb}
                         onChange={v => setDelivery(d => ({ ...d, pixWeb: v }))} />
                       <div className="fc-calc-auto">
-                        <span className="fc-calc-label">Pix automático Web Cardápio</span>
+                        <span className="fc-calc-label">Valor sem pix automático</span>
                         <span className="fc-calc-valor">R$ {fmt(Math.max(0, delivery.vendaWeb - delivery.pixWeb))}</span>
                       </div>
-                      <Campo label="App Brendi" value={delivery.vendaBundi}
-                        onChange={v => setDelivery(d => ({ ...d, vendaBundi: v }))} />
+                    </div>
+
+                    <div className="fc-divider" />
+
+                    <div className="fc-secao">
+                      <div className="brendi-toggle-wrap">
+                        <span className="fc-secao-label" style={{ marginBottom: 0 }}>App Brendi</span>
+                        <div className="brendi-toggle">
+                          <button
+                            className={`brendi-btn ${brendiAtivo === 'A' ? 'brendi-btn--ativo' : ''}`}
+                            onClick={() => setBrendiAtivo('A')}
+                          >🍦 Açaí</button>
+                          <button
+                            className={`brendi-btn ${brendiAtivo === 'B' ? 'brendi-btn--ativo' : ''}`}
+                            onClick={() => setBrendiAtivo('B')}
+                          >🍕 Pizza / Hamburguer</button>
+                        </div>
+                      </div>
+
+                      {brendiAtivo === 'A' ? (
+                        <>
+                          <Campo label="Valor total" value={delivery.vendaBundiA}
+                            onChange={v => setDelivery(d => ({ ...d, vendaBundiA: v }))} />
+                          <Campo label="Valor em pix automático" value={delivery.pixBundiA}
+                            onChange={v => setDelivery(d => ({ ...d, pixBundiA: v }))} />
+                          <div className="fc-calc-auto">
+                            <span className="fc-calc-label">Valor sem pix automático</span>
+                            <span className="fc-calc-valor">R$ {fmt(Math.max(0, delivery.vendaBundiA - delivery.pixBundiA))}</span>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <Campo label="Valor total" value={delivery.vendaBundiB}
+                            onChange={v => setDelivery(d => ({ ...d, vendaBundiB: v }))} />
+                          <Campo label="Valor em pix automático" value={delivery.pixBundiB}
+                            onChange={v => setDelivery(d => ({ ...d, pixBundiB: v }))} />
+                          <div className="fc-calc-auto">
+                            <span className="fc-calc-label">Valor sem pix automático</span>
+                            <span className="fc-calc-valor">R$ {fmt(Math.max(0, delivery.vendaBundiB - delivery.pixBundiB))}</span>
+                          </div>
+                        </>
+                      )}
                     </div>
 
                     <div className="fc-divider" />
@@ -468,28 +543,38 @@ export default function Fechamento() {
 
               {/* Cards de resumo */}
               <div className="fc-resumo-grid">
+
+                {/* Card Salão */}
                 <div className="fc-card fc-card--salao">
                   <div className="fc-card-header fc-card-header--salao"><IconStore /> Salão</div>
                   <div className="fc-resumo-body">
-                    <LinhaResumo label="Vendas mesas"            value={relatorio.sistSalao} />
-                    <LinhaResumo label="Retirada líquida"        value={relatorio.pixRetiradaAuto} sub />
-                    <LinhaResumo label="Total esperado"          value={relatorio.totalVendasSalao} destaque />
+                    <LinhaResumo label="Vendas mesas"         value={relatorio.sistSalao} />
+                    <LinhaResumo label="Retirada líquida"     value={relatorio.pixRetiradaAuto} sub />
+                    <LinhaResumo label="Total esperado"       value={relatorio.totalVendasSalao} destaque />
                     <div className="fc-divider" />
-                    <LinhaResumo label="Realizado (caixa)"       value={relatorio.realSalao} />
-                    <LinhaResumo label="Excedente"               value={relatorio.excedente} sub />
+                    <LinhaResumo label="Dinheiro (bruto)"     value={relatorio.dinheiroGaveta - relatorio.trocoInicial} sub />
+                    <LinhaResumo label="Maquininha salão"     value={relatorio.maqSalao} sub />
+                    <LinhaResumo label="Maquininha retirada"  value={relatorio.maqRetirada} sub />
+                    <LinhaResumo label="Excedente func."      value={relatorio.excedente} sub />
+                    <LinhaResumo label="Total realizado"      value={relatorio.realSalao} destaque />
                     <div className="fc-divider" />
-                    <LinhaResumo label="Diferença"               value={relatorio.difSalao} destaque />
+                    <LinhaResumo label="Diferença"            value={relatorio.difSalao} destaque />
                   </div>
                 </div>
 
+                {/* Card Delivery */}
                 <div className="fc-card fc-card--delivery">
                   <div className="fc-card-header fc-card-header--delivery"><IconBike /> Delivery</div>
                   <div className="fc-resumo-body">
-                    <LinhaResumo label="Web Cardápio — Venda total" value={relatorio.vendaWeb} />
-                    <LinhaResumo label="Pix automático Web Cardápio" value={relatorio.pixWebAuto} sub />
-                    <LinhaResumo label="Esperado (sistema)"  value={relatorio.sistDeliv} />
-                    <LinhaResumo label="Realizado (líquido)" value={relatorio.realDelivLiq} />
-                    <LinhaResumo label="Gasolina"            value={relatorio.totalGasEnt} sub />
+                    <LinhaResumo label="Web Cardápio" value={relatorio.pixWebAuto} sub />
+                    <LinhaResumo label="Brendi Açaí Brendi"  value={relatorio.pixBundiAAuto} sub />
+                    <LinhaResumo label="Brendi Pizza/Hamb"   value={relatorio.pixBundiBAuto} sub />
+                    <LinhaResumo label="Total esperado"         value={relatorio.sistDeliv} destaque />
+                    <div className="fc-divider" />
+                    <LinhaResumo label="Maquininhas"            value={motoboys.reduce((s,m) => s+m.maq, 0)} sub />
+                    <LinhaResumo label="Dinheiro"               value={motoboys.reduce((s,m) => s+m.din, 0)} sub />
+                    <LinhaResumo label="Gasolina"               value={relatorio.totalGasEnt} sub />
+                    <LinhaResumo label="Total realizado"        value={relatorio.realDelivLiq} destaque />
                     <div className="fc-divider" />
                     <LinhaResumo label="Diferença" value={relatorio.difDeliv} destaque />
                   </div>
@@ -508,6 +593,7 @@ export default function Fechamento() {
                     </>
                   )}
                 </div>
+
               </div>
             </div>
 

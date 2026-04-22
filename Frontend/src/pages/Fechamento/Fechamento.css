@@ -378,3 +378,40 @@
 .modal-titulo { margin: 0; font-size: 1rem; font-weight: 700; color: var(--c-text); }
 .modal-sub    { margin: 0; font-size: 0.85rem; color: var(--c-muted); line-height: 1.5; }
 .modal-acoes  { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }
+
+/* ── Brendi Toggle ── */
+.brendi-toggle-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.brendi-toggle {
+  display: flex;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 3px;
+}
+
+.brendi-btn {
+  flex: 1;
+  padding: 7px 10px;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--c-subtle);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.brendi-btn--ativo {
+  background: rgba(251,146,60,0.15);
+  border: 1px solid rgba(251,146,60,0.3);
+  color: var(--c-deliv);
+}
