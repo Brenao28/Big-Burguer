@@ -1,5 +1,5 @@
 // src/contexts/AuthContext.jsx
-// Atualizado: planoAtivo agora considera plano_expira_em
+// Atualizado: expõe isGerente além de isAdmin
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
@@ -56,7 +56,9 @@ export function AuthProvider({ children }) {
     user,
     perfil,
     loading: loading || perfilLoading,
-    isAdmin:    perfil?.perfil === 'admin',
+    isAdmin:   perfil?.perfil === 'admin',
+    isGerente: perfil?.perfil === 'gerente',
+    isFuncionario: perfil?.perfil === 'funcionario',
     planoAtivo,
     recarregarPerfil: () => carregarPerfil(user),
   };

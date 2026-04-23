@@ -1,0 +1,31 @@
+/* ── Adicionar ao final de Historico.css ──────────────────── */
+
+/* Botões do modal de detalhe */
+.hist-modal-acoes {
+  display: flex;
+  gap: 10px;
+  flex-direction: column;
+}
+
+.hist-btn-deletar {
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  border-radius: 8px;
+  padding: 9px;
+  color: #f87171;
+  font-size: 0.84rem;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  width: 100%;
+}
+
+.hist-btn-deletar:hover:not(:disabled) {
+  background: rgba(248, 113, 113, 0.2);
+}
+
+.hist-btn-deletar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

@@ -12,6 +12,8 @@ const Login      = lazy(() => import('./pages/Login/Login'));
 const Fechamento = lazy(() => import('./pages/Fechamento/Fechamento'));
 const Historico  = lazy(() => import('./pages/Historico/Historico'));
 const Plano      = lazy(() => import('./pages/Plano/Plano'));
+const Equipe     = lazy(() => import('./pages/Equipe/Equipe'));
+const RedefinirSenha = lazy(() => import('./pages/RedefinirSenha/RedefinirSenha'));
 
 // ── Toast global ──────────────────────────────────────────────
 export const ToastContext = React.createContext(null);
@@ -69,6 +71,17 @@ function GuardaPlano({ children }) {
   return children;
 }
 
+// Apenas gerente acessa esta rota
+function GuardaGerente({ children }) {
+  const { user, perfil, loading } = useAuth();
+  if (loading) return <Carregando />;
+  if (!user)   return <Navigate to="/login" replace />;
+  if (perfil && perfil.perfil !== 'gerente' && perfil.perfil !== 'admin') {
+    return <Navigate to="/" replace />;
+  }
+  return children;
+}
+
 // ── Avatar dropdown ───────────────────────────────────────────
 function AvatarMenu({ user }) {
   const [aberto, setAberto] = useState(false);
@@ -107,19 +120,22 @@ function AvatarMenu({ user }) {
 }
 
 // ── Navbar ────────────────────────────────────────────────────
-const LINKS = [
-  { path: '/',          label: 'Caixa'    },
-  { path: '/historico', label: 'Histórico' },
-];
-
 const Navbar = memo(function Navbar() {
-  const { user, planoAtivo, loading } = useAuth();
+  const { user, perfil, planoAtivo, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const indicadorRef = useRef(null);
   const btnRefs = useRef([]);
 
-  const links = [...LINKS, { path: '/plano', label: planoAtivo ? '⭐ Pro' : 'Plano' }];
+  const isGerente = perfil?.perfil === 'gerente' || perfil?.perfil === 'admin';
+
+  // Links base — equipe só aparece para gerente/admin
+  const links = [
+    { path: '/',          label: 'Caixa'    },
+    { path: '/historico', label: 'Histórico' },
+    ...(isGerente ? [{ path: '/equipe', label: '👥 Equipe' }] : []),
+    { path: '/plano',     label: planoAtivo ? '⭐ Pro' : 'Plano' },
+  ];
 
   // Move o indicador animado para o botão ativo
   useEffect(() => {
@@ -133,7 +149,7 @@ const Navbar = memo(function Navbar() {
     } else if (ind) {
       ind.style.opacity = '0';
     }
-  }, [location.pathname, planoAtivo]);
+  }, [location.pathname, planoAtivo, isGerente]);
 
   if (loading || !user || location.pathname === '/login') return null;
 
@@ -180,11 +196,13 @@ function AppInner() {
       <Suspense fallback={<Carregando />}>
         <PaginaAnimada>
           <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/" element={<GuardaPlano><Fechamento /></GuardaPlano>} />
+            <Route path="/login"   element={<Login />} />
+            <Route path="/"        element={<GuardaPlano><Fechamento /></GuardaPlano>} />
             <Route path="/historico" element={<GuardaPlano><Historico /></GuardaPlano>} />
-            <Route path="/plano" element={<RotaProtegida><Plano /></RotaProtegida>} />
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="/plano"   element={<RotaProtegida><Plano /></RotaProtegida>} />
+            <Route path="/equipe"  element={<GuardaGerente><Equipe /></GuardaGerente>} />
+            <Route path="/redefinir-senha" element={<RedefinirSenha />} />
+            <Route path="*"        element={<Navigate to="/" replace />} />
           </Routes>
         </PaginaAnimada>
       </Suspense>

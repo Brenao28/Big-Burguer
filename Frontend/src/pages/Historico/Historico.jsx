@@ -1,8 +1,9 @@
 // src/pages/Historico/Historico.jsx
-import React, { useState, useEffect } from 'react';
-import { listarFechamentos } from '../../lib/api';
+import React, { useState, useEffect, useContext } from 'react';
+import { listarFechamentos, deletarFechamento } from '../../lib/api';
 import { fmt } from '../../lib/format';
 import { useAuth } from '../../contexts/AuthContext';
+import { ToastContext } from '../../App';
 import './Historico.css';
 
 // ── Skeleton ──────────────────────────────────────────────────
@@ -17,7 +18,7 @@ function SkeletonLista() {
 }
 
 // ── Modal de detalhe ──────────────────────────────────────────
-function ModalDetalhe({ f, onFechar }) {
+function ModalDetalhe({ f, onFechar, podeDeletar, onDeletar, deletando }) {
   const positivo = Math.abs(f.total_geral) < 1;
 
   return (
@@ -67,7 +68,18 @@ function ModalDetalhe({ f, onFechar }) {
           </div>
         )}
 
-        <button className="hist-fechar" onClick={onFechar}>Fechar</button>
+        <div className="hist-modal-acoes">
+          {podeDeletar && (
+            <button
+              className="hist-btn-deletar"
+              onClick={() => onDeletar(f.id)}
+              disabled={deletando}
+            >
+              {deletando ? 'Removendo…' : '🗑 Remover fechamento'}
+            </button>
+          )}
+          <button className="hist-fechar" onClick={onFechar}>Fechar</button>
+        </div>
       </div>
     </div>
   );
@@ -75,14 +87,20 @@ function ModalDetalhe({ f, onFechar }) {
 
 // ── Componente principal ──────────────────────────────────────
 export default function Historico() {
-  const { isAdmin } = useAuth();
+  const { user, isAdmin, isGerente, isFuncionario } = useAuth();
+  const addToast = useContext(ToastContext);
+
   const [fechamentos, setFechamentos] = useState([]);
   const [loading,     setLoading]     = useState(true);
   const [erro,        setErro]        = useState('');
   const [pagina,      setPagina]      = useState(0);
   const [temMais,     setTemMais]     = useState(false);
   const [selecionado, setSelecionado] = useState(null);
+  const [deletando,   setDeletando]   = useState(false);
   const LIMITE = 20;
+
+  // Hoje em formato YYYY-MM-DD para comparação
+  const hoje = new Date().toISOString().split('T')[0];
 
   async function carregar(pag = 0) {
     setLoading(true); setErro('');
@@ -101,11 +119,34 @@ export default function Historico() {
 
   useEffect(() => { carregar(0); }, []);
 
+  // Regra: gerente/admin deletam qualquer um; funcionário só o próprio do dia
+  function podeDeletar(f) {
+    if (isAdmin || isGerente) return true;
+    if (isFuncionario && f.criado_por === user?.id && f.data_fechamento === hoje) return true;
+    return false;
+  }
+
+  async function handleDeletar(id) {
+    setDeletando(true);
+    try {
+      await deletarFechamento(id);
+      addToast('Fechamento removido.', 'ok');
+      setSelecionado(null);
+      carregar(0);
+    } catch (err) {
+      addToast(err.message || 'Erro ao remover fechamento.', 'erro');
+    } finally {
+      setDeletando(false);
+    }
+  }
+
+  const isAdminOuGerente = isAdmin || isGerente;
+
   return (
     <div className="hist-root">
       <div className="hist-cabecalho">
         <h1>Histórico de fechamentos</h1>
-        {isAdmin && <span className="hist-badge-admin">Visualização: todos</span>}
+        {isAdminOuGerente && <span className="hist-badge-admin">Visualização: todos</span>}
       </div>
 
       {erro && <div className="hist-erro">{erro}</div>}
@@ -134,7 +175,7 @@ export default function Historico() {
                 <div className={`hist-indicador ${positivo ? 'hist-indicador--ok' : 'hist-indicador--alerta'}`} />
                 <div className="hist-item-info">
                   <span className="hist-item-data">{f.data_referencia || f.data_fechamento}</span>
-                  {isAdmin && f.criador_nome && (
+                  {isAdminOuGerente && f.criador_nome && (
                     <span className="hist-item-autor">{f.criador_nome}</span>
                   )}
                 </div>
@@ -159,7 +200,13 @@ export default function Historico() {
       )}
 
       {selecionado && (
-        <ModalDetalhe f={selecionado} onFechar={() => setSelecionado(null)} />
+        <ModalDetalhe
+          f={selecionado}
+          onFechar={() => setSelecionado(null)}
+          podeDeletar={podeDeletar(selecionado)}
+          onDeletar={handleDeletar}
+          deletando={deletando}
+        />
       )}
     </div>
   );

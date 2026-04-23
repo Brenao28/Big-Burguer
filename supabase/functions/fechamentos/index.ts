@@ -125,6 +125,55 @@ Deno.serve(async (req: Request) => {
       return json({ fechamentos: data ?? [] });
     }
 
+    // ── Deletar fechamento ────────────────────────────────────
+    if (action === 'deletar') {
+      const { id } = body;
+      if (!id) return json({ error: 'ID do fechamento é obrigatório' }, 400);
+
+      // Busca perfil do usuário
+      const { data: perfil } = await supabase
+        .from('perfis')
+        .select('perfil')
+        .eq('id', user.id)
+        .single();
+
+      const isAdminOuGerente = perfil?.perfil === 'admin' || perfil?.perfil === 'gerente';
+
+      // Busca o fechamento para validação
+      const { data: fechamento } = await supabase
+        .from('fechamentos')
+        .select('criado_por, data_fechamento')
+        .eq('id', id)
+        .single();
+
+      if (!fechamento) {
+        return json({ error: 'Fechamento não encontrado' }, 404);
+      }
+
+      // Funcionário: só pode deletar o próprio e do dia atual
+      if (!isAdminOuGerente) {
+        if (fechamento.criado_por !== user.id) {
+          return json({ error: 'Você não pode deletar fechamentos de outros funcionários' }, 403);
+        }
+        const hoje = new Date().toISOString().split('T')[0];
+        if (fechamento.data_fechamento !== hoje) {
+          return json({ error: 'Você só pode deletar fechamentos do dia atual' }, 403);
+        }
+      }
+
+      const { error: deleteError } = await supabase
+        .from('fechamentos')
+        .delete()
+        .eq('id', id);
+
+      if (deleteError) {
+        console.error('Erro ao deletar fechamento:', deleteError);
+        return json({ error: 'Erro ao deletar. Tente novamente.' }, 500);
+      }
+
+      return json({ ok: true });
+    }
+
     return json({ error: 'Ação desconhecida' }, 400);
 
   } catch (err) {
