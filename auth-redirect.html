@@ -5,24 +5,26 @@
   <title>Redirecionando...</title>
 </head>
 <body>
-  <pre id="info" style="word-break:break-all; padding:1rem; font-size:12px;"></pre>
   <script>
-    const hash   = window.location.hash;
-    const search = window.location.search;
-    const href   = window.location.href;
+    const hash = window.location.hash.substring(1);
+    const params = new URLSearchParams(hash);
 
-    document.getElementById('info').textContent =
-      'HREF:\n' + href + '\n\nHASH:\n' + hash + '\n\nSEARCH:\n' + search;
-
-    const params = new URLSearchParams(hash.substring(1));
     const accessToken  = params.get('access_token');
     const refreshToken = params.get('refresh_token');
     const type         = params.get('type');
 
-    document.getElementById('info').textContent +=
-      '\n\naccess_token: ' + accessToken +
-      '\nrefresh_token: ' + refreshToken +
-      '\ntype: ' + type;
+    if (accessToken && type === 'recovery') {
+      // Passa os tokens como parte do hash do HashRouter
+      window.location.replace(
+        '/?access_token=' + accessToken +
+        '&refresh_token=' + refreshToken +
+        '&type=' + type +
+        '#/redefinir-senha'
+      );
+    } else {
+      window.location.replace('/#/login');
+    }
   </script>
+  <p>Redirecionando...</p>
 </body>
 </html>
