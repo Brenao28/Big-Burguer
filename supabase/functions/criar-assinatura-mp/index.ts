@@ -54,7 +54,7 @@ serve(async (req: Request) => {
       auto_recurring: {
         frequency: 1,
         frequency_type: 'months',
-        transaction_amount: 79.90,
+        transaction_amount: 149.90,
         currency_id: 'BRL',
         free_trial: {
           frequency: 1,

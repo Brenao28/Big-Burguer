@@ -42,7 +42,7 @@ Deno.serve(async (req: Request) => {
       .eq('id', user.id)
       .single();
 
-    if (perfil?.perfil !== 'gerente') {
+    if (perfil?.perfil !== 'gerente' && perfil?.perfil !== 'admin') {
       return json({ error: 'Acesso restrito ao gerente' }, 403);
     }
 
