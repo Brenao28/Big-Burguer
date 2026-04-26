@@ -12,15 +12,37 @@ export function AuthProvider({ children }) {
   const [loading,       setLoading]       = useState(true);
   const [perfilLoading, setPerfilLoading] = useState(false);
 
-  async function carregarPerfil(sessionUser) {
-    if (!sessionUser) { setPerfil(null); return; }
+  async function carregarPerfil(sessionUser, forcarRecarga = false) {
+    if (!sessionUser) {
+      setPerfil(null);
+      sessionStorage.removeItem('bb_perfil');
+      return;
+    }
+
+    // Usa cache do sessionStorage se disponível e não forçar recarga
+    if (!forcarRecarga) {
+      const cached = sessionStorage.getItem('bb_perfil');
+      if (cached) {
+        try {
+          setPerfil(JSON.parse(cached));
+          return;
+        } catch {
+          sessionStorage.removeItem('bb_perfil');
+        }
+      }
+    }
+
     setPerfilLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('perfil', {
         body: { action: 'get' },
       });
-      if (!error) setPerfil(data);
-      else setPerfil(null);
+      if (!error && data) {
+        setPerfil(data);
+        sessionStorage.setItem('bb_perfil', JSON.stringify(data));
+      } else {
+        setPerfil(null);
+      }
     } catch {
       setPerfil(null);
     } finally {
@@ -60,7 +82,7 @@ export function AuthProvider({ children }) {
     isGerente: perfil?.perfil === 'gerente',
     isFuncionario: perfil?.perfil === 'funcionario',
     planoAtivo,
-    recarregarPerfil: () => carregarPerfil(user),
+    recarregarPerfil: () => carregarPerfil(user, true),
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

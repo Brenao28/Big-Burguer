@@ -54,6 +54,7 @@ export async function registrar(email, password, nome) {
 
 /** Logout */
 export async function logout() {
+  sessionStorage.removeItem('bb_perfil');
   await supabase.auth.signOut();
 }
 
