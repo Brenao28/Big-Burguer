@@ -152,9 +152,11 @@ export async function cancelarAssinatura() {
 
 /** Lista todos os nomes de entregadores salvos do gerente */
 export async function listarEntregadores() {
+  const { data: { user } } = await supabase.auth.getUser();
   const { data, error } = await supabase
     .from('nomes_entregadores')
     .select('id, nome')
+    .eq('gerente_id', user.id)
     .order('nome', { ascending: true });
   if (error) throw error;
   return data;
