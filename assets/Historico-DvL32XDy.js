@@ -1,5 +1,5 @@
 import { r as reactExports, g as getDefaultExportFromCjs, f as commonjsGlobal, h as requireReact, s as shallowEqual, b as reactDomExports, i as reactIsExports, k as React, P as Provider_default, j as jsxRuntimeExports } from './vendor-jF1s2-c6.js';
-import { u as useAuth, T as ToastContext, b as listarFechamentos, d as deletarFechamento } from './index-fCq_c9TD.js';
+import { u as useAuth, T as ToastContext, b as listarFechamentos, d as deletarFechamento } from './index-C6ZEiERR.js';
 import { f as fmt } from './format-CcxP-_eH.js';
 import './supabase-1T9tw6ve.js';
 

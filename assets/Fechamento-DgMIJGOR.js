@@ -1,5 +1,5 @@
 import { r as reactExports, j as jsxRuntimeExports } from './vendor-jF1s2-c6.js';
-import { T as ToastContext, _ as __vitePreload, c as criarFechamento, u as useAuth } from './index-fCq_c9TD.js';
+import { T as ToastContext, _ as __vitePreload, c as criarFechamento, u as useAuth } from './index-C6ZEiERR.js';
 import { f as fmt, p as parse } from './format-CcxP-_eH.js';
 import './supabase-1T9tw6ve.js';
 
@@ -25,14 +25,14 @@ const DELIVERY_VAZIO = {
 };
 
 const MOTOBOY_NOVO = (n) => ({
-  nome: `Entregador ${n}`,
+  nome: ``,
   qtd: 0,
   maq: 0,
   din: 0,
   gas: 0,
 });
 
-const STORAGE_KEY = 'fechamento_rascunho';
+const STORAGE_KEY$1 = 'fechamento_rascunho';
 
 // ── Funções Helper ────────────────────────────────────────────
 function dataReferencia() {
@@ -51,13 +51,13 @@ function dataReferencia() {
 
 function salvarRascunho(data) {
   try {
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    sessionStorage.setItem(STORAGE_KEY$1, JSON.stringify(data));
   } catch {}
 }
 
 function carregarRascunho() {
   try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
+    const raw = sessionStorage.getItem(STORAGE_KEY$1);
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
@@ -77,7 +77,7 @@ function useFechamento() {
     rascunho?.delivery || DELIVERY_VAZIO
   );
   const [motoboys, setMotoboys] = reactExports.useState(
-    rascunho?.motoboys || [MOTOBOY_NOVO(1)]
+    rascunho?.motoboys || [MOTOBOY_NOVO()]
   );
   const [brendiAtivo, setBrendiAtivo] = reactExports.useState('A');
   const [relatorio, setRelatorio] = reactExports.useState(null);
@@ -300,7 +300,7 @@ function useFechamento() {
   function novoFechamento() {
     setSalao(SALAO_VAZIO);
     setDelivery(DELIVERY_VAZIO);
-    setMotoboys([MOTOBOY_NOVO(1)]);
+    setMotoboys([MOTOBOY_NOVO()]);
     setRelatorio(null);
     setErros({});
     setEtapa('formulario');
@@ -308,7 +308,7 @@ function useFechamento() {
     setConfirmarNovo(false);
 
     try {
-      sessionStorage.removeItem(STORAGE_KEY);
+      sessionStorage.removeItem(STORAGE_KEY$1);
     } catch {}
   }
 
@@ -759,6 +759,109 @@ const IconCamera = () => /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: 
   /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "13", r: "4" })
 ] });
 
+const STORAGE_KEY = "bb_nomes_motoboys";
+function getNomesSalvos() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+  } catch {
+    return [];
+  }
+}
+function salvarNome(nome) {
+  const n = nome.trim();
+  if (n.length < 2) return;
+  const lista = getNomesSalvos();
+  if (!lista.includes(n)) {
+    lista.push(n);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(lista));
+  }
+}
+function removerNome(nome) {
+  const lista = getNomesSalvos().filter((n) => n !== nome);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(lista));
+}
+function MotoboyNomeInput({ value, onChange, placeholder }) {
+  const [aberto, setAberto] = reactExports.useState(false);
+  const [nomes, setNomes] = reactExports.useState([]);
+  const wrapRef = reactExports.useRef(null);
+  reactExports.useEffect(() => {
+    function handler(e) {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) {
+        setAberto(false);
+      }
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+  const sugestoes = nomes.filter(
+    (n) => n.toLowerCase().includes(value.toLowerCase()) && n !== value.trim()
+  );
+  const nomeNovo = value.trim().length >= 2 && !nomes.includes(value.trim());
+  const mostrarDropdown = aberto && (sugestoes.length > 0 || nomeNovo);
+  function handleFocus() {
+    setNomes(getNomesSalvos());
+    setAberto(true);
+  }
+  function handleBlur() {
+    if (value.trim().length >= 2) {
+      salvarNome(value.trim());
+      setNomes(getNomesSalvos());
+    }
+  }
+  function selecionarNome(nome) {
+    onChange(nome);
+    setAberto(false);
+  }
+  function handleDeletar(e, nome) {
+    e.preventDefault();
+    e.stopPropagation();
+    removerNome(nome);
+    setNomes(getNomesSalvos());
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "motoboy-nome-wrap", ref: wrapRef, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "input",
+      {
+        className: "motoboy-nome",
+        type: "text",
+        value,
+        placeholder,
+        onChange: (e) => onChange(e.target.value),
+        onFocus: handleFocus,
+        onBlur: handleBlur,
+        autoComplete: "off"
+      }
+    ),
+    mostrarDropdown && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "motoboy-sugestoes", children: [
+      sugestoes.map((nome) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "div",
+        {
+          className: "motoboy-sugestao-item",
+          onMouseDown: () => selecionarNome(nome),
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "motoboy-sugestao-nome", children: nome }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "button",
+              {
+                className: "motoboy-sugestao-del",
+                title: "Remover nome salvo",
+                onMouseDown: (e) => handleDeletar(e, nome),
+                children: "✕"
+              }
+            )
+          ]
+        },
+        nome
+      )),
+      nomeNovo && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "motoboy-sugestao-hint", children: [
+        'Pressione Tab ou clique fora para salvar "',
+        value.trim(),
+        '"'
+      ] })
+    ] })
+  ] });
+}
+
 const ABAS = [
   { id: "salao", label: "Salão", Icon: IconStore },
   { id: "delivery", label: "Delivery", Icon: IconBike }
@@ -836,7 +939,7 @@ function FormularioFechamento({
   function addMotoboy() {
     onMotoboysChange([
       ...motoboys,
-      { nome: `Entregador ${motoboys.length + 1}`, qtd: 0, maq: 0, din: 0, gas: 0 }
+      { nome: ``, qtd: 0, maq: 0, din: 0, gas: 0 }
     ]);
   }
   function removeMotoboy() {
@@ -1101,13 +1204,11 @@ function FormularioFechamento({
                     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "motoboy-topo", children: [
                       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "motoboy-avatar", children: m.nome.charAt(0).toUpperCase() }),
                       /* @__PURE__ */ jsxRuntimeExports.jsx(
-                        "input",
+                        MotoboyNomeInput,
                         {
-                          className: "motoboy-nome",
-                          type: "text",
                           value: m.nome,
                           placeholder: `Entregador ${i + 1}`,
-                          onChange: (e) => editarMotoboy(i, "nome", e.target.value)
+                          onChange: (v) => editarMotoboy(i, "nome", v)
                         }
                       )
                     ] }),
