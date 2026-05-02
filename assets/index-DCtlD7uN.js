@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/Login-BfI08MTH.js","assets/vendor-jF1s2-c6.js","assets/supabase-1T9tw6ve.js","assets/Login-P1K1hMeg.css","assets/Fechamento-CvSLSQkZ.js","assets/format-CcxP-_eH.js","assets/Fechamento-Cd0mKfRa.css","assets/Historico-BeGQ_emf.js","assets/Historico-CV6QmbPa.css","assets/Plano-DCsnCZ4q.js","assets/Plano-XQq3oUCK.css","assets/Equipe-CA2Dv6gt.js","assets/Equipe-Cm_FHM0f.css","assets/RedefinirSenha-B2U894Mg.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/Login-SQwVJO4r.js","assets/vendor-jF1s2-c6.js","assets/supabase-1T9tw6ve.js","assets/Login-P1K1hMeg.css","assets/Fechamento-NOtibt-7.js","assets/format-CcxP-_eH.js","assets/Fechamento-Cd0mKfRa.css","assets/Historico-CL9rD1Gh.js","assets/Historico-CV6QmbPa.css","assets/Plano-DiAiR-V6.js","assets/Plano-XQq3oUCK.css","assets/Equipe-Bm3XIbaF.js","assets/Equipe-Cm_FHM0f.css","assets/RedefinirSenha-CqwMK_Dm.js"])))=>i.map(i=>d[i]);
 import { r as reactExports, j as jsxRuntimeExports, R as React, u as useNavigate, a as useLocation, b as reactDomExports, H as HashRouter, c as Routes, d as Route, N as Navigate, e as ReactDOM } from './vendor-jF1s2-c6.js';
 import { c as createClient } from './supabase-1T9tw6ve.js';
 
@@ -316,7 +316,8 @@ async function resolverGerenteId() {
     .single();
   if (error) throw error;
   // Gerente usa o próprio ID; funcionário usa o gerente_id do seu perfil
-  return perfil.perfil === 'gerente' ? user.id : perfil.gerente_id;
+  if (perfil.perfil === 'gerente' || perfil.perfil === 'admin') return user.id;
+  return perfil.gerente_id;
 }
 
 /**
@@ -355,12 +356,12 @@ async function removerEntregador(id) {
   if (error) throw error;
 }
 
-const Login = reactExports.lazy(() => __vitePreload(() => import('./Login-BfI08MTH.js'),true              ?__vite__mapDeps([0,1,2,3]):void 0));
-const Fechamento = reactExports.lazy(() => __vitePreload(() => import('./Fechamento-CvSLSQkZ.js'),true              ?__vite__mapDeps([4,1,5,2,6]):void 0));
-const Historico = reactExports.lazy(() => __vitePreload(() => import('./Historico-BeGQ_emf.js'),true              ?__vite__mapDeps([7,1,5,2,8]):void 0));
-const Plano = reactExports.lazy(() => __vitePreload(() => import('./Plano-DCsnCZ4q.js'),true              ?__vite__mapDeps([9,1,2,10]):void 0));
-const Equipe = reactExports.lazy(() => __vitePreload(() => import('./Equipe-CA2Dv6gt.js'),true              ?__vite__mapDeps([11,1,2,12]):void 0));
-const RedefinirSenha = reactExports.lazy(() => __vitePreload(() => import('./RedefinirSenha-B2U894Mg.js'),true              ?__vite__mapDeps([13,1,2,3]):void 0));
+const Login = reactExports.lazy(() => __vitePreload(() => import('./Login-SQwVJO4r.js'),true              ?__vite__mapDeps([0,1,2,3]):void 0));
+const Fechamento = reactExports.lazy(() => __vitePreload(() => import('./Fechamento-NOtibt-7.js'),true              ?__vite__mapDeps([4,1,5,2,6]):void 0));
+const Historico = reactExports.lazy(() => __vitePreload(() => import('./Historico-CL9rD1Gh.js'),true              ?__vite__mapDeps([7,1,5,2,8]):void 0));
+const Plano = reactExports.lazy(() => __vitePreload(() => import('./Plano-DiAiR-V6.js'),true              ?__vite__mapDeps([9,1,2,10]):void 0));
+const Equipe = reactExports.lazy(() => __vitePreload(() => import('./Equipe-Bm3XIbaF.js'),true              ?__vite__mapDeps([11,1,2,12]):void 0));
+const RedefinirSenha = reactExports.lazy(() => __vitePreload(() => import('./RedefinirSenha-CqwMK_Dm.js'),true              ?__vite__mapDeps([13,1,2,3]):void 0));
 const ToastContext = React.createContext(null);
 function ToastProvider({ children }) {
   const [toasts, setToasts] = reactExports.useState([]);
