@@ -92,6 +92,16 @@ export function ResultadoFechamento({
                 sub
               />
               <LinhaResumo
+                label="Notinhas"
+                value={relatorio.notinhas}
+                sub
+              />
+              <LinhaResumo
+                label="Abastecimento"
+                value={relatorio.abastecimento}
+                sub
+              />
+              <LinhaResumo
                 label="Total realizado"
                 value={relatorio.realSalao}
                 destaque
@@ -140,11 +150,6 @@ export function ResultadoFechamento({
               <LinhaResumo
                 label="Dinheiro"
                 value={motoboys.reduce((s, m) => s + m.din, 0)}
-                sub
-              />
-              <LinhaResumo
-                label="Gasolina"
-                value={relatorio.totalGasEnt}
                 sub
               />
               <LinhaResumo

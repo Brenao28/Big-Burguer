@@ -60,8 +60,9 @@ export function MotoboyNomeInput({ value, onChange, placeholder }) {
         await salvarEntregador(nomeLimpo);
         const lista = await listarEntregadores();
         setNomes(lista ?? []);
-      } catch {
+      } catch (err) {
         // silencioso — não bloqueia o uso
+        console.error('Erro ao salvar entregador:', err);
       }
     }
   }

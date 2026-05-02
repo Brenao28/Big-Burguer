@@ -3,6 +3,15 @@
 -- Execute no SQL Editor do Supabase
 -- ─────────────────────────────────────────────────────────────
 
+-- ── Funções Auxiliares ────────────────────────────────────────
+-- Resolve o problema de infinite recursion nas policies
+CREATE OR REPLACE FUNCTION get_user_perfil()
+RETURNS TEXT
+LANGUAGE sql SECURITY DEFINER SET search_path = public
+AS $$
+  SELECT perfil FROM perfis WHERE id = auth.uid() LIMIT 1;
+$$;
+
 -- ── Tabela de perfis ──────────────────────────────────────────
 -- Espelha auth.users com dados extras do negócio.
 CREATE TABLE IF NOT EXISTS perfis (
@@ -11,6 +20,7 @@ CREATE TABLE IF NOT EXISTS perfis (
   email       TEXT,
   perfil      TEXT NOT NULL DEFAULT 'funcionario'
                 CHECK (perfil IN ('admin', 'gerente', 'funcionario')),
+  gerente_id  UUID REFERENCES perfis(id) ON DELETE SET NULL,
   ativo       BOOLEAN NOT NULL DEFAULT true,
   plano_ativo BOOLEAN NOT NULL DEFAULT false,
   criado_em   TIMESTAMPTZ DEFAULT NOW()
@@ -48,17 +58,25 @@ CREATE TABLE IF NOT EXISTS fechamentos (
   motoboys         JSONB DEFAULT '[]'
 );
 
+-- ── Tabela de Entregadores ────────────────────────────────────
+CREATE TABLE IF NOT EXISTS nomes_entregadores (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  gerente_id UUID NOT NULL REFERENCES perfis(id) ON DELETE CASCADE,
+  nome TEXT NOT NULL,
+  criado_em TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(gerente_id, nome)
+);
+
 -- ── RLS (Row Level Security) ──────────────────────────────────
 ALTER TABLE perfis     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE fechamentos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE nomes_entregadores ENABLE ROW LEVEL SECURITY;
 
 -- Perfis: cada usuário vê/edita só o próprio; admin vê todos
 CREATE POLICY "perfis_leitura" ON perfis
   FOR SELECT USING (
     auth.uid() = id
-    OR EXISTS (
-      SELECT 1 FROM perfis p WHERE p.id = auth.uid() AND p.perfil = 'admin'
-    )
+    OR get_user_perfil() = 'admin'
   );
 
 CREATE POLICY "perfis_atualizacao_proprio" ON perfis
@@ -68,10 +86,7 @@ CREATE POLICY "perfis_atualizacao_proprio" ON perfis
 CREATE POLICY "fechamentos_leitura" ON fechamentos
   FOR SELECT USING (
     auth.uid() = criado_por
-    OR EXISTS (
-      SELECT 1 FROM perfis p
-      WHERE p.id = auth.uid() AND p.perfil IN ('admin', 'gerente')
-    )
+    OR get_user_perfil() IN ('admin', 'gerente')
   );
 
 CREATE POLICY "fechamentos_criacao" ON fechamentos
@@ -79,9 +94,20 @@ CREATE POLICY "fechamentos_criacao" ON fechamentos
 
 CREATE POLICY "fechamentos_delete_admin" ON fechamentos
   FOR DELETE USING (
-    EXISTS (
-      SELECT 1 FROM perfis p WHERE p.id = auth.uid() AND p.perfil = 'admin'
-    )
+    get_user_perfil() = 'admin'
+  );
+
+-- Nomes Entregadores
+CREATE POLICY "nomes_entregadores_leitura" ON nomes_entregadores
+  FOR SELECT USING (
+    auth.uid() = gerente_id
+    OR auth.uid() IN (SELECT id FROM perfis WHERE gerente_id = nomes_entregadores.gerente_id)
+  );
+
+CREATE POLICY "nomes_entregadores_modificacao" ON nomes_entregadores
+  FOR ALL USING (
+    auth.uid() = gerente_id
+    OR auth.uid() IN (SELECT id FROM perfis WHERE gerente_id = nomes_entregadores.gerente_id)
   );
 
 -- ── View para listagem com nome do criador ────────────────────

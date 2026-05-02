@@ -97,7 +97,7 @@ export function FormularioFechamento({
   function addMotoboy() {
     onMotoboysChange([
       ...motoboys,
-      { nome: ``, qtd: 0, maq: 0, din: 0, gas: 0 },
+      { nome: ``, qtd: 0, maq: 0, din: 0 },
     ]);
   }
 
@@ -227,11 +227,24 @@ export function FormularioFechamento({
               <div className="fc-divider" />
 
               <div className="fc-secao">
-                <span className="fc-secao-label">Deduções</span>
+                <span className="fc-secao-label">Deduções e Ajustes</span>
                 <Campo
                   label="Excedente funcionários"
+                  hint="valor que sobrou quando funcionário pagou mais"
                   value={salao.excedente}
                   onChange={(v) => handleSalaoChange('excedente', v)}
+                />
+                <Campo
+                  label="Notinhas"
+                  hint="pedidos de funcionários não pagos"
+                  value={salao.notinhas}
+                  onChange={(v) => handleSalaoChange('notinhas', v)}
+                />
+                <Campo
+                  label="Abastecimento"
+                  hint="valor retirado para abastecer veículos"
+                  value={salao.abastecimento}
+                  onChange={(v) => handleSalaoChange('abastecimento', v)}
                 />
               </div>
             </div>
@@ -368,7 +381,6 @@ export function FormularioFechamento({
                         ['qtd', 'Entregas'],
                         ['maq', 'Maquininha'],
                         ['din', 'Dinheiro'],
-                        ['gas', 'Gasolina'],
                       ].map(([campo, lbl]) => (
                         <div key={campo} className="motoboy-campo">
                           <span>{lbl}</span>

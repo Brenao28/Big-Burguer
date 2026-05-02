@@ -14,9 +14,11 @@ export const SALAO_VAZIO = {
   maq: 0,
   din: 0,
   excedente: 0,
+  notinhas: 0,
   vendaRetirada: 0,
   pixRetirada: 0,
   maqRetirada: 0,
+  abastecimento: 0,
 };
 
 export const DELIVERY_VAZIO = {
@@ -33,7 +35,6 @@ export const MOTOBOY_NOVO = (n) => ({
   qtd: 0,
   maq: 0,
   din: 0,
-  gas: 0,
 });
 
 const STORAGE_KEY = 'fechamento_rascunho';
@@ -197,13 +198,14 @@ export function useFechamento() {
     if (!validar()) return;
 
     const pixRetiradaAuto = salao.vendaRetirada - salao.pixRetirada;
-    const totalVendasSalao = salao.vendaSist + pixRetiradaAuto;
+    const totalVendasSalao = salao.vendaSist + pixRetiradaAuto - salao.excedente;
     const realSalao =
       salao.din -
       salao.inicial +
       salao.maq +
       salao.maqRetirada +
-      salao.excedente;
+      salao.notinhas +
+      salao.abastecimento;
     const difSalao = realSalao - totalVendasSalao;
 
     const pixWebAuto = delivery.vendaWeb - delivery.pixWeb;
@@ -213,14 +215,15 @@ export function useFechamento() {
 
     const totalMaq = motoboys.reduce((s, m) => s + m.maq, 0);
     const totalDin = motoboys.reduce((s, m) => s + m.din, 0);
-    const totalGas = motoboys.reduce((s, m) => s + m.gas, 0);
-    const realDelivLiq = totalMaq + totalDin + totalGas;
+    const realDelivLiq = totalMaq + totalDin;
     const difDeliv = realDelivLiq - sistDeliv;
 
     const dados = {
       sistSalao: salao.vendaSist,
       realSalao,
       excedente: salao.excedente,
+      notinhas: salao.notinhas,
+      abastecimento: salao.abastecimento,
       difSalao,
       totalVendasSalao,
       pixRetiradaAuto,
@@ -238,7 +241,6 @@ export function useFechamento() {
       pixBundiBAuto,
       sistDeliv,
       realDelivLiq,
-      totalGasEnt: totalGas,
       difDeliv,
       totalGeral: difSalao + difDeliv,
       dataFechamento: dataReferencia(),

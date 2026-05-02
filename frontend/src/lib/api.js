@@ -164,7 +164,8 @@ async function resolverGerenteId() {
     .single();
   if (error) throw error;
   // Gerente usa o próprio ID; funcionário usa o gerente_id do seu perfil
-  return perfil.perfil === 'gerente' ? user.id : perfil.gerente_id;
+  if (perfil.perfil === 'gerente' || perfil.perfil === 'admin') return user.id;
+  return perfil.gerente_id;
 }
 
 /**
