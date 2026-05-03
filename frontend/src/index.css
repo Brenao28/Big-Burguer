@@ -86,6 +86,16 @@ html, body, #root {
   color: var(--text);
 }
 
+@media print {
+  html, body, #root {
+    background: #fff !important;
+    background-image: none !important;
+    background-attachment: unset !important;
+    color: #111 !important;
+    min-height: auto !important;
+  }
+}
+
 body {
   font-family: var(--font);
   -webkit-font-smoothing: antialiased;

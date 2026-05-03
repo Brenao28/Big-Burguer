@@ -149,7 +149,7 @@ function RaioXDelivery({ relatorio, motoboys }) {
                 sinal="+"
                 label={m.nome || `Entregador ${i + 1}`}
                 value={total}
-                hint={`${m.qtd || 0} entrega${(m.qtd || 0) !== 1 ? 's' : ''} · maq R$ ${fmt(m.maq)} + din R$ ${fmt(m.din)}`}
+                hint={`maq R$ ${fmt(m.maq)} + din R$ ${fmt(m.din)}`}
               />
             );
           })}
@@ -196,7 +196,7 @@ export function ResultadoFechamento({
 
   return (
     <div ref={resultadoRef} className="fc-fade">
-      <div ref={conteudoRef}></div>
+      <div ref={conteudoRef} className="fc-resultado-wrap" />
 
       {/* ── Raio-X dos Cálculos ── */}
       <div className="raio-x-wrap">
@@ -227,6 +227,13 @@ export function ResultadoFechamento({
                 {relatorio.difSalao >= -0.5 && relatorio.difDeliv < -0.5 && ' A divergência está concentrada no delivery.'}
               </div>
             )}
+            {/* Observação: aparece aqui tanto na tela quanto na impressão */}
+            {observacao ? (
+              <div className="fc-obs-screenshot">
+                <span className="fc-obs-screenshot-label">Observação:</span>
+                <span className="fc-obs-screenshot-texto">{observacao}</span>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
@@ -243,85 +250,19 @@ export function ResultadoFechamento({
         />
       </div>
 
-      {/* ── Bloco de Impressão (invisível na tela) ── */}
-      <div className="print-only">
-        <div className="print-header">
-          <h1 className="print-titulo">Fechamento de Caixa</h1>
-          <p className="print-data">{relatorio.dataFechamento}</p>
-          <div className={`print-resultado ${positivo ? 'print-resultado--ok' : 'print-resultado--alerta'}`}>
-            {positivo ? 'CAIXA FECHADO · TUDO CONFERE' : 'DIVERGÊNCIA ENCONTRADA'}
-            {' — '}R$ {fmt(relatorio.totalGeral)}
-          </div>
-        </div>
-
-        {/* Salão */}
-        <div className="print-secao">
-          <h2 className="print-secao-titulo">SALÃO</h2>
-          <div className="print-grupo">
-            <span className="print-grupo-label">① O que o sistema esperava receber</span>
-            <div className="print-linha"><span>Vendas mesas (sistema)</span><span>R$ {fmt(relatorio.sistSalao)}</span></div>
-            <div className="print-linha"><span>Retirada líquida ({fmt(relatorio.vendaRetirada)} − {fmt(relatorio.pixRetirada)} pix)</span><span>R$ {fmt(relatorio.pixRetiradaAuto)}</span></div>
-            <div className="print-linha print-linha--total"><span>= Total esperado</span><span>R$ {fmt(relatorio.totalVendasSalao)}</span></div>
-          </div>
-          <div className="print-grupo">
-            <span className="print-grupo-label">② O que foi realmente apurado</span>
-            <div className="print-linha"><span>Dinheiro na gaveta ({fmt(relatorio.dinheiroGaveta)} − {fmt(relatorio.trocoInicial)} troco)</span><span>R$ {fmt(relatorio.dinheiroGaveta - relatorio.trocoInicial)}</span></div>
-            <div className="print-linha"><span>Maquininha salão</span><span>R$ {fmt(relatorio.maqSalao)}</span></div>
-            <div className="print-linha"><span>Maquininha retirada</span><span>R$ {fmt(relatorio.maqRetirada)}</span></div>
-            <div className="print-linha"><span>Notinhas (pedidos de funcionários)</span><span>R$ {fmt(relatorio.notinhas)}</span></div>
-            <div className="print-linha"><span>Abastecimento</span><span>R$ {fmt(relatorio.abastecimento)}</span></div>
-            <div className="print-linha"><span>Excedente funcionários (−)</span><span>R$ {fmt(relatorio.excedente)}</span></div>
-            <div className="print-linha print-linha--total"><span>= Total realizado</span><span>R$ {fmt(relatorio.realSalao)}</span></div>
-          </div>
-          <div className="print-linha print-linha--diferenca"><span>Diferença salão</span><span className={relatorio.difSalao < 0 ? 'print-neg' : 'print-pos'}>R$ {fmt(relatorio.difSalao)}</span></div>
-        </div>
-
-        {/* Delivery */}
-        <div className="print-secao">
-          <h2 className="print-secao-titulo">DELIVERY</h2>
-          <div className="print-grupo">
-            <span className="print-grupo-label">① O que o sistema esperava receber</span>
-            <div className="print-linha"><span>Web Cardápio ({fmt(relatorio.vendaWeb)} − {fmt(relatorio.pixWeb)} pix)</span><span>R$ {fmt(relatorio.pixWebAuto)}</span></div>
-            <div className="print-linha"><span>Brendi Açaí ({fmt(relatorio.vendaBundiA)} − {fmt(relatorio.pixBundiA)} pix)</span><span>R$ {fmt(relatorio.pixBundiAAuto)}</span></div>
-            <div className="print-linha"><span>Brendi Pizza/Hamb ({fmt(relatorio.vendaBundiB)} − {fmt(relatorio.pixBundiB)} pix)</span><span>R$ {fmt(relatorio.pixBundiBAuto)}</span></div>
-            <div className="print-linha print-linha--total"><span>= Total esperado</span><span>R$ {fmt(relatorio.sistDeliv)}</span></div>
-          </div>
-          <div className="print-grupo">
-            <span className="print-grupo-label">② O que os motoboys trouxeram</span>
-            {motoboys.map((m, i) => (
-              <div key={i} className="print-linha">
-                <span>{m.nome || `Entregador ${i + 1}`} — {m.qtd || 0} entrega{(m.qtd || 0) !== 1 ? 's' : ''} (maq R$ {fmt(m.maq)} + din R$ {fmt(m.din)})</span>
-                <span>R$ {fmt((m.maq || 0) + (m.din || 0))}</span>
-              </div>
-            ))}
-            <div className="print-linha print-linha--total"><span>= Total realizado</span><span>R$ {fmt(relatorio.realDelivLiq)}</span></div>
-          </div>
-          <div className="print-linha print-linha--diferenca"><span>Diferença delivery</span><span className={relatorio.difDeliv < 0 ? 'print-neg' : 'print-pos'}>R$ {fmt(relatorio.difDeliv)}</span></div>
-        </div>
-
-        {/* Resumo Geral */}
-        <div className="print-secao print-secao--final">
-          <h2 className="print-secao-titulo">RESUMO GERAL</h2>
-          <div className="print-linha"><span>Diferença salão</span><span>R$ {fmt(relatorio.difSalao)}</span></div>
-          <div className="print-linha"><span>Diferença delivery</span><span>R$ {fmt(relatorio.difDeliv)}</span></div>
-          <div className="print-linha print-linha--grande"><span>DIFERENÇA TOTAL</span><span className={relatorio.totalGeral < 0 ? 'print-neg' : relatorio.totalGeral > 0 ? 'print-pos' : ''}>R$ {fmt(relatorio.totalGeral)}</span></div>
-        </div>
-
-        {/* Observação */}
-        {observacao ? (
-          <div className="print-observacao">
-            <span className="print-observacao-label">Observação:</span>
-            <span className="print-observacao-texto">{observacao}</span>
-          </div>
-        ) : null}
-      </div>
-
       {/* ── Botões de Ação ── */}
       <div className="fc-acoes">
         <button className="btn btn--ghost" onClick={onVoltar}>
           ← Voltar e editar
         </button>
-        <button className="btn btn--copiar" onClick={() => window.print()}>
+        <button className="btn btn--copiar" onClick={() => {
+          // Aplica zoom via meta viewport para forçar caber em 1 página
+          const meta = document.querySelector('meta[name="viewport"]');
+          const prev = meta?.content;
+          if (meta) meta.content = 'width=device-width, initial-scale=1';
+          window.print();
+          if (meta && prev) setTimeout(() => { meta.content = prev; }, 500);
+        }}>
           🖨️ Imprimir
         </button>
         <button className="btn btn--ghost" onClick={onNovoFechamento}>
@@ -373,58 +314,6 @@ export function ResultadoFechamento({
         .raio-x-alerta { margin-top: 8px; padding: 10px 12px; background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.2); border-radius: 8px; font-size: 0.8rem; color: #fca5a5; line-height: 1.5; }
         .raio-x-alerta--total { background: rgba(248,113,113,0.12); border-color: rgba(248,113,113,0.3); font-size: 0.85rem; }
         .raio-x-ok { margin-top: 8px; padding: 10px 12px; background: rgba(74,222,128,0.07); border: 1px solid rgba(74,222,128,0.2); border-radius: 8px; font-size: 0.8rem; color: #86efac; line-height: 1.5; }
-
-        /* ── IMPRESSÃO ── */
-        .print-only { display: none; }
-
-        @media print {
-          /* Esconde tudo da tela */
-          body * { visibility: hidden; }
-
-          /* Mostra só o bloco de impressão */
-          .print-only, .print-only * { visibility: visible !important; }
-          .print-only {
-            display: block !important;
-            position: static;
-            width: 100%;
-            padding: 32px 40px;
-            font-family: 'Arial', sans-serif;
-            color: #111;
-            background: #fff;
-          }
-
-          .print-header { text-align: center; margin-bottom: 28px; border-bottom: 2px solid #111; padding-bottom: 16px; }
-          .print-titulo { font-size: 20px; font-weight: 700; margin: 0 0 4px; }
-          .print-data { font-size: 13px; color: #555; margin: 0 0 10px; }
-          .print-resultado { font-size: 15px; font-weight: 700; padding: 6px 14px; display: inline-block; border-radius: 4px; }
-          .print-resultado--ok { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
-          .print-resultado--alerta { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
-
-          .print-secao { margin-bottom: 22px; }
-          .print-secao-titulo { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; color: #444; border-bottom: 1px solid #ccc; padding-bottom: 4px; margin: 0 0 10px; }
-          .print-secao--final { border-top: 2px solid #111; padding-top: 12px; }
-
-          .print-grupo { margin-bottom: 12px; }
-          .print-grupo-label { font-size: 10px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 4px; }
-
-          .print-linha { display: flex; justify-content: space-between; font-size: 12px; padding: 3px 0; border-bottom: 1px dotted #e5e5e5; }
-          .print-linha span:first-child { color: #333; }
-          .print-linha span:last-child { font-weight: 600; font-variant-numeric: tabular-nums; }
-
-          .print-linha--total { border-bottom: 1px solid #999; border-top: 1px solid #999; font-weight: 700; font-size: 13px; padding: 5px 0; margin-top: 2px; }
-          .print-linha--total span { font-weight: 700; }
-
-          .print-linha--diferenca { font-size: 13px; font-weight: 700; padding: 6px 0; border-bottom: none; }
-
-          .print-linha--grande { font-size: 15px; font-weight: 700; padding: 8px 0; border-top: 1px solid #111; margin-top: 4px; }
-
-          .print-neg { color: #b91c1c; }
-          .print-pos { color: #065f46; }
-
-          .print-observacao { margin-top: 24px; padding: 12px; border: 1px solid #ccc; border-radius: 4px; background: #f9f9f9; }
-          .print-observacao-label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #555; display: block; margin-bottom: 4px; }
-          .print-observacao-texto { font-size: 13px; color: #222; }
-        }
       `}</style>
     </div>
   );

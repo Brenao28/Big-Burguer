@@ -652,24 +652,27 @@
 
 /* ── Impressão ───────────────────────────────────────────────── */
 @media print {
-  /* Configura página A4 sem margens excessivas */
   @page {
     size: A4 portrait;
-    margin: 12mm 14mm;
+    margin: 8mm 10mm;
   }
 
-  /* Força tudo em uma única página */
+  /* Garante cores na impressão */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
   html, body {
     height: auto !important;
     overflow: visible !important;
     background: #fff !important;
-    color: #000 !important;
-    font-size: 11px !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    color: #111 !important;
+    /* Fonte base pequena para caber tudo na página */
+    font-size: 9px !important;
   }
 
-  /* Esconde tudo exceto o resultado do fechamento */
+  /* ── Ocultar elementos de UI ── */
   .navbar,
   .fc-acoes,
   .fc-observacao-wrap,
@@ -677,156 +680,189 @@
   .fc-viewport,
   .btn,
   .avatar-wrap,
-  .toast-wrap {
+  .toast-wrap,
+  .raio-x-intro {
     display: none !important;
   }
 
-  /* Remove padding/margin desnecessários da página */
+  /* ── Layout: remove toda folga ── */
   .fc-root,
+  .fc-layout,
   .fc-main {
     padding: 0 !important;
-    margin: 0 !important;
-    max-width: 100% !important;
+    margin: 0 auto !important;
+    max-width: 160mm !important;
+    width: 160mm !important;
     min-height: auto !important;
+    gap: 0 !important;
   }
 
-  /* Resultado ocupa a largura toda */
   .fc-fade {
-    gap: 8px !important;
+    gap: 4px !important;
     animation: none !important;
+    width: 100% !important;
   }
 
+  /* ── Bloco de observação (se tiver) ── */
   .fc-resultado-wrap {
     background: #fff !important;
-    border: 1px solid #ddd !important;
-    border-radius: 8px !important;
-    padding: 12px !important;
-    gap: 10px !important;
+    border: none !important;
+    padding: 0 !important;
+    gap: 4px !important;
     box-shadow: none !important;
-    break-inside: avoid;
   }
 
-  /* Hero com cores visíveis na impressão */
+  /* ── Hero: compacto ── */
   .fc-hero {
-    padding: 16px 14px !important;
-    border-radius: 8px !important;
-    break-inside: avoid;
+    padding: 8px 10px !important;
+    border-radius: 6px !important;
+    gap: 3px !important;
+    animation: none !important;
+    background: #fff !important;
+    border: 1.5px solid #d1d5db !important;
   }
-  .fc-hero--ok {
-    background: #f0fdf4 !important;
-    border-color: #86efac !important;
-  }
-  .fc-hero--alerta {
-    background: #fef2f2 !important;
-    border-color: #fca5a5 !important;
-  }
-  .fc-hero-valor { font-size: 2rem !important; }
+  .fc-hero--ok    { border-color: #d1d5db !important; }
+  .fc-hero--alerta { border-color: #d1d5db !important; }
+  .fc-hero::before { display: none !important; }
+
+  .fc-hero-icone    { width: 28px !important; height: 28px !important; margin-bottom: 2px !important; background: #f3f4f6 !important; }
+  .fc-hero-icone svg { width: 14px !important; height: 14px !important; }
+  .fc-hero-valor    { font-size: 1.5rem !important; }
   .fc-hero-valor--ok     { color: #16a34a !important; }
   .fc-hero-valor--alerta { color: #dc2626 !important; }
-  .fc-hero-label  { color: #374151 !important; }
-  .fc-hero-data   { color: #6b7280 !important; }
-  .fc-hero-operador       { color: #6b7280 !important; }
+  .fc-hero-label    { font-size: 0.78rem !important; color: #374151 !important; }
+  .fc-hero-data     { font-size: 0.7rem !important;  color: #6b7280 !important; }
+  .fc-hero-operador { font-size: 0.7rem !important;  color: #6b7280 !important; }
   .fc-hero-operador strong { color: #374151 !important; }
 
-  /* Grid de resumo */
+  /* ── Grid resumo ── */
   .fc-resumo-grid {
     grid-template-columns: 1fr 1fr !important;
-    gap: 8px !important;
+    gap: 5px !important;
   }
 
-  /* Cards do resumo */
+  /* ── Cards ── */
   .fc-card,
   .fc-card--salao,
   .fc-card--delivery {
-    background: #fafafa !important;
-    border: 1px solid #e5e7eb !important;
-    border-radius: 6px !important;
-    padding: 10px !important;
-    gap: 8px !important;
+    background: #fff !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 5px !important;
+    padding: 6px 8px !important;
+    gap: 4px !important;
     box-shadow: none !important;
-    break-inside: avoid;
   }
-
+  .fc-card-header { font-size: 0.75rem !important; padding-bottom: 0 !important; }
+  .fc-card-header svg { width: 11px !important; height: 11px !important; }
   .fc-card-header--salao    { color: #2563eb !important; }
   .fc-card-header--delivery { color: #ea580c !important; }
 
-  .linha-resumo         { color: #374151 !important; font-size: 0.78rem !important; }
-  .linha-resumo--sub    { color: #6b7280 !important; }
-  .linha-resumo--destaque { color: #111827 !important; border-top-color: #e5e7eb !important; }
+  .fc-secao { gap: 3px !important; }
+  .fc-secao-label { font-size: 0.62rem !important; margin-bottom: 0 !important; }
+  .fc-divider { margin: 1px 0 !important; background: #e5e7eb !important; }
 
-  /* Raio-X */
-  .raio-x-wrap { margin: 6px 0 !important; }
+  .linha-resumo         { font-size: 0.72rem !important; color: #374151 !important; padding: 1px 0 !important; }
+  .linha-resumo--sub    { font-size: 0.68rem !important; color: #6b7280 !important; }
+  .linha-resumo--destaque { font-size: 0.76rem !important; color: #111827 !important; border-top-color: #e5e7eb !important; padding: 3px 0 2px !important; margin-top: 1px !important; }
+
+  /* Motoboy resumo */
+  .motoboy-resumo        { padding: 2px 0 !important; gap: 5px !important; }
+  .motoboy-resumo-nome   { color: #111827 !important; }
+  .motoboy-resumo-qtd    { color: #6b7280 !important; }
+  .motoboy-resumo-total  { color: #374151 !important; }
+  .motoboy-avatar        { width: 20px !important; height: 20px !important; font-size: 0.6rem !important; background: #dbeafe !important; border-color: #93c5fd !important; color: #1d4ed8 !important; }
+  .motoboy-avatar.sm     { width: 18px !important; height: 18px !important; }
+
+  /* ── Raio-X ── */
+  .raio-x-wrap { margin: 4px 0 0 !important; }
   .raio-x-painel--aberto {
-    background: #fafafa !important;
-    border: 1px solid #e5e7eb !important;
-    border-radius: 6px !important;
-    padding: 10px !important;
-    gap: 12px !important;
-    break-inside: avoid;
+    background: #fff !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 5px !important;
+    padding: 7px 8px !important;
+    gap: 7px !important;
   }
-  .raio-x-intro  { color: #6b7280 !important; font-size: 0.74rem !important; }
-  .raio-x-titulo { color: #1f2937 !important; }
-  .raio-x-passo-label { color: #6b7280 !important; }
-  .raio-x-separador { background: #e5e7eb !important; }
+  .raio-x-separador { background: #d1d5db !important; margin: 0 !important; }
+  .raio-x-bloco     { gap: 5px !important; }
   .raio-x-bloco--final {
-    background: #f3f4f6 !important;
-    border-color: #d1d5db !important;
+    background: #fff !important;
+    border: 1px solid #d1d5db !important;
+    padding: 6px 8px !important;
+    gap: 5px !important;
   }
+  .raio-x-titulo     { font-size: 0.76rem !important; color: #1f2937 !important; gap: 5px !important; }
+  .raio-x-titulo svg { width: 12px !important; height: 12px !important; }
+  .raio-x-passo      { gap: 3px !important; }
+  .raio-x-passo-label { font-size: 0.64rem !important; color: #6b7280 !important; }
+  .raio-x-passo--resultado .raio-x-passo-label { color: #4b5563 !important; }
 
   .lc-equacao {
-    background: #f9fafb !important;
+    background: #fff !important;
     border: 1px solid #e5e7eb !important;
-    border-radius: 4px !important;
-    padding: 6px 8px !important;
-    gap: 2px !important;
+    border-radius: 3px !important;
+    padding: 4px 6px !important;
+    gap: 1px !important;
   }
-  .lc-linha  { color: #374151 !important; font-size: 0.78rem !important; }
-  .lc-sinal  { color: #6b7280 !important; }
-  .lc-hint   { color: #9ca3af !important; }
-  .lc-valor  { color: #111827 !important; }
+  .lc-linha   { font-size: 0.7rem !important; color: #374151 !important; padding: 1px 0 !important; gap: 4px !important; }
+  .lc-sinal   { width: 11px !important; color: #6b7280 !important; font-size: 0.8rem !important; }
+  .lc-hint    { font-size: 0.62rem !important; color: #9ca3af !important; }
+  .lc-valor   { color: #111827 !important; }
   .lc-valor--neg { color: #dc2626 !important; }
-  .lc-soma   { border-top-color: #d1d5db !important; font-size: 0.8rem !important; }
-  .lc-soma-label     { color: #1f2937 !important; }
+  .lc-soma    {
+    margin-top: 3px !important; padding-top: 3px !important;
+    border-top-color: #d1d5db !important;
+    font-size: 0.73rem !important;
+  }
+  .lc-soma-label       { color: #1f2937 !important; }
   .lc-soma-valor--neg  { color: #dc2626 !important; }
   .lc-soma-valor--pos  { color: #16a34a !important; }
   .lc-soma-valor--zero { color: #16a34a !important; }
 
   .raio-x-alerta {
-    background: #fef2f2 !important;
-    border-color: #fca5a5 !important;
-    color: #991b1b !important;
+    margin-top: 4px !important; padding: 5px 7px !important;
+    background: #fff !important;
+    border: 1px solid #d1d5db !important;
+    color: #dc2626 !important;
+    font-size: 0.7rem !important;
+    border-radius: 4px !important;
   }
+  .raio-x-alerta--total { font-size: 0.73rem !important; }
   .raio-x-ok {
-    background: #f0fdf4 !important;
-    border-color: #86efac !important;
-    color: #166534 !important;
+    margin-top: 4px !important; padding: 5px 7px !important;
+    background: #fff !important;
+    border: 1px solid #d1d5db !important;
+    color: #16a34a !important;
+    font-size: 0.7rem !important;
+    border-radius: 4px !important;
   }
 
-  /* Observação (se existir) */
+  /* ── Observação no PDF (dentro do resumo geral) ── */
   .fc-obs-screenshot {
-    background: #f9fafb !important;
-    border-color: #e5e7eb !important;
+    background: #fff !important;
+    border: 1px solid #d1d5db !important;
+    padding: 5px 7px !important;
+    gap: 2px !important;
+    border-radius: 4px !important;
+    margin-top: 4px !important;
   }
-  .fc-obs-screenshot-label { color: #6b7280 !important; }
-  .fc-obs-screenshot-texto  { color: #111827 !important; }
+  .fc-obs-screenshot-label { font-size: 0.62rem !important; color: #6b7280 !important; }
+  .fc-obs-screenshot-texto  { font-size: 0.72rem !important; color: #111827 !important; }
 
-  /* Motoboy resumo */
-  .motoboy-resumo-nome  { color: #111827 !important; }
-  .motoboy-resumo-qtd   { color: #6b7280 !important; }
-  .motoboy-resumo-total { color: #374151 !important; }
-  .motoboy-avatar { background: #dbeafe !important; border-color: #93c5fd !important; color: #1d4ed8 !important; }
-
-  /* Garante que não haja quebra de página indesejada */
-  .fc-resultado-wrap,
-  .raio-x-painel--aberto,
+  /* ── Sem quebra de página dentro de blocos ── */
+  .fc-hero,
+  .fc-resumo-grid,
   .fc-card,
-  .raio-x-bloco {
+  .raio-x-painel--aberto,
+  .raio-x-bloco,
+  .raio-x-bloco--final,
+  .lc-equacao {
     page-break-inside: avoid;
     break-inside: avoid;
   }
 
-  /* Força tudo em uma única página */
-  .fc-fade {
+  /* Tudo em uma única página */
+  html, body, .fc-root, .fc-main, .fc-fade {
     page-break-after: avoid;
+    break-after: avoid;
   }
 }
