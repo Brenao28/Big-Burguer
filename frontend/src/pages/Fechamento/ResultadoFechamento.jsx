@@ -5,9 +5,8 @@
  */
 
 import React from 'react';
-import { IconStore, IconBike, IconCheck, IconAlert, IconCamera, IconRefresh } from "../../components/Icons";
+import { IconStore, IconBike, IconRefresh } from "../../components/Icons";
 import { fmt } from "../../lib/format";
-import { useAuth } from "../../contexts/AuthContext";
 
 // ── Componente: Linha de Cálculo ──────────────────────────────
 function LinhaCalculo({ sinal, label, value, destaque, hint }) {
@@ -187,38 +186,17 @@ export function ResultadoFechamento({
   conteudoRef,
   relatorio,
   motoboys,
-  copiando,
-  copiado,
   observacao,
   onObservacaoChange,
   onVoltar,
   onCopiar,
   onNovoFechamento,
 }) {
-  const { perfil } = useAuth();
-  const nomeFuncionario = perfil?.nome || perfil?.email || 'Funcionário';
   const positivo = relatorio && Math.abs(relatorio.totalGeral) < 1;
 
   return (
     <div ref={resultadoRef} className="fc-fade">
       <div ref={conteudoRef} className="fc-resultado-wrap">
-
-        {/* ── Hero: número grande ── */}
-        <div className={`fc-hero ${positivo ? 'fc-hero--ok' : 'fc-hero--alerta'}`}>
-          <div className="fc-hero-icone">
-            {positivo ? <IconCheck /> : <IconAlert />}
-          </div>
-          <div className={`fc-hero-valor ${positivo ? 'fc-hero-valor--ok' : 'fc-hero-valor--alerta'}`}>
-            R$ {fmt(relatorio.totalGeral)}
-          </div>
-          <div className="fc-hero-label">
-            {positivo ? 'Caixa fechado · Tudo confere' : 'Divergência encontrada'}
-          </div>
-          <div className="fc-hero-data">{relatorio.dataFechamento}</div>
-          <div className="fc-hero-operador">Fechado por: <strong>{nomeFuncionario}</strong></div>
-        </div>
-
-        {/* ── Observação (screenshot) ── */}
         {observacao ? (
           <div className="fc-obs-screenshot">
             <span className="fc-obs-screenshot-label">Observação:</span>
@@ -277,8 +255,8 @@ export function ResultadoFechamento({
         <button className="btn btn--ghost" onClick={onVoltar}>
           ← Voltar e editar
         </button>
-        <button className="btn btn--copiar" onClick={onCopiar} disabled={copiando}>
-          {copiando ? '⏳ Gerando...' : copiado ? <><IconCheck /> Copiado!</> : <><IconCamera /> Copiar p/ WhatsApp</>}
+        <button className="btn btn--copiar" onClick={() => window.print()}>
+          🖨️ Imprimir
         </button>
         <button className="btn btn--ghost" onClick={onNovoFechamento}>
           <IconRefresh /> Novo fechamento
