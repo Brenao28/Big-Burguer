@@ -1,5 +1,5 @@
 import { r as reactExports, j as jsxRuntimeExports } from './vendor-jF1s2-c6.js';
-import { T as ToastContext, _ as __vitePreload, c as criarFechamento, s as salvarEntregador, b as listarEntregadores, d as removerEntregador } from './index-nVPKhocy.js';
+import { T as ToastContext, _ as __vitePreload, c as criarFechamento, s as salvarEntregador, b as listarEntregadores, d as removerEntregador } from './index-2KkJ2R-W.js';
 import { f as fmt, p as parse } from './format-CcxP-_eH.js';
 import './supabase-1T9tw6ve.js';
 
@@ -969,23 +969,35 @@ function FormularioFechamento({
   const abaIdx = ABAS.findIndex((a) => a.id === aba);
   const viewportRef = reactExports.useRef(null);
   const slideRefs = reactExports.useRef([]);
-  const [altura, setAltura] = reactExports.useState("auto");
+  const rafRef = reactExports.useRef(null);
+  function medirAposTransicao() {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => {
+      const ativo = slideRefs.current[abaIdx];
+      if (viewportRef.current && ativo) {
+        viewportRef.current.style.height = `${ativo.scrollHeight}px`;
+      }
+    });
+  }
   reactExports.useLayoutEffect(() => {
-    function medir() {
-      const ativo2 = slideRefs.current[abaIdx];
-      if (ativo2) setAltura(`${ativo2.scrollHeight}px`);
-    }
-    medir();
+    medirAposTransicao();
     const ativo = slideRefs.current[abaIdx];
     if (!ativo || typeof ResizeObserver === "undefined") return;
-    const obs = new ResizeObserver(medir);
+    let debounce;
+    const obs = new ResizeObserver(() => {
+      clearTimeout(debounce);
+      debounce = setTimeout(medirAposTransicao, 100);
+    });
     obs.observe(ativo);
-    return () => obs.disconnect();
+    return () => {
+      obs.disconnect();
+      clearTimeout(debounce);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
   }, [abaIdx, motoboys.length, brendiAtivo]);
   reactExports.useEffect(() => {
     function onResize() {
-      const ativo = slideRefs.current[abaIdx];
-      if (ativo) setAltura(`${ativo.scrollHeight}px`);
+      medirAposTransicao();
     }
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
@@ -997,7 +1009,6 @@ function FormularioFechamento({
       {
         className: "fc-viewport",
         ref: viewportRef,
-        style: { height: altura },
         onTouchStart,
         onTouchEnd,
         children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
