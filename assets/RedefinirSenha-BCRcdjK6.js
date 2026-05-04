@@ -1,5 +1,5 @@
 import { u as useNavigate, r as reactExports, j as jsxRuntimeExports } from './vendor-jF1s2-c6.js';
-import { k as supabase } from './index-2KkJ2R-W.js';
+import { k as supabase } from './index-BtucOAKh.js';
 /* empty css               */
 import './supabase-1T9tw6ve.js';
 

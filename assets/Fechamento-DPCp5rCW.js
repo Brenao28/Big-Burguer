@@ -1,5 +1,5 @@
 import { r as reactExports, j as jsxRuntimeExports } from './vendor-jF1s2-c6.js';
-import { T as ToastContext, _ as __vitePreload, c as criarFechamento, s as salvarEntregador, b as listarEntregadores, d as removerEntregador } from './index-2KkJ2R-W.js';
+import { T as ToastContext, c as criarFechamento, _ as __vitePreload, s as salvarEntregador, b as listarEntregadores, d as removerEntregador } from './index-BtucOAKh.js';
 import { f as fmt, p as parse } from './format-CcxP-_eH.js';
 import './supabase-1T9tw6ve.js';
 
@@ -68,18 +68,13 @@ function carregarRascunho() {
 // ── Hook Principal ───────────────────────────────────────────
 function useFechamento() {
   const toast = reactExports.useContext(ToastContext);
-  const rascunho = carregarRascunho();
 
-  // Estado Principal
+  // carregarRascunho só na inicialização — não recalcula a cada render
   const [etapa, setEtapa] = reactExports.useState('formulario');
   const [aba, setAba] = reactExports.useState('salao');
-  const [salao, setSalao] = reactExports.useState(rascunho?.salao || SALAO_VAZIO);
-  const [delivery, setDelivery] = reactExports.useState(
-    rascunho?.delivery || DELIVERY_VAZIO
-  );
-  const [motoboys, setMotoboys] = reactExports.useState(
-    rascunho?.motoboys || [MOTOBOY_NOVO(1)]
-  );
+  const [salao, setSalao] = reactExports.useState(() => carregarRascunho()?.salao || SALAO_VAZIO);
+  const [delivery, setDelivery] = reactExports.useState(() => carregarRascunho()?.delivery || DELIVERY_VAZIO);
+  const [motoboys, setMotoboys] = reactExports.useState(() => carregarRascunho()?.motoboys || [MOTOBOY_NOVO(1)]);
   const [brendiAtivo, setBrendiAtivo] = reactExports.useState('A');
   const [relatorio, setRelatorio] = reactExports.useState(null);
   const [erros, setErros] = reactExports.useState({});
@@ -114,8 +109,8 @@ function useFechamento() {
     }
   }, [etapa]);
 
-  // ── Subtotais para toggle ──────────────────────────────────
-  const subtotais = {
+  // ── Subtotais para toggle — memoizado para não recalcular a cada render ──
+  const subtotais = reactExports.useMemo(() => ({
     salao:
       salao.maq +
       salao.maqRetirada +
@@ -128,29 +123,31 @@ function useFechamento() {
       delivery.pixBundiA +
       delivery.vendaBundiB -
       delivery.pixBundiB,
-  };
+  }), [salao, delivery]);
 
   // ── Touch para navegação de abas ───────────────────────────
-  function onTouchStart(e) {
+  const onTouchStart = reactExports.useCallback((e) => {
     toque.current = e.touches[0].clientX;
-  }
+  }, []);
 
-  function onTouchEnd(e) {
+  const onTouchEnd = reactExports.useCallback((e) => {
     if (!toque.current) return;
     const diff = toque.current - e.changedTouches[0].clientX;
     if (Math.abs(diff) < 50) return;
 
     const abas = ['salao', 'delivery'];
-    const idx = abas.indexOf(aba);
-
-    if (diff > 0 && idx < abas.length - 1) setAba(abas[idx + 1]);
-    if (diff < 0 && idx > 0) setAba(abas[idx - 1]);
+    setAba((prev) => {
+      const idx = abas.indexOf(prev);
+      if (diff > 0 && idx < abas.length - 1) return abas[idx + 1];
+      if (diff < 0 && idx > 0) return abas[idx - 1];
+      return prev;
+    });
 
     toque.current = null;
-  }
+  }, []);
 
   // ── Manipulação de Motoboys ────────────────────────────────
-  function editarMotoboy(i, campo, val) {
+  const editarMotoboy = reactExports.useCallback((i, campo, val) => {
     setMotoboys((prev) => {
       const next = [...prev];
       next[i] = {
@@ -159,18 +156,18 @@ function useFechamento() {
       };
       return next;
     });
-  }
+  }, []);
 
-  function addMotoboy() {
+  const addMotoboy = reactExports.useCallback(() => {
     setMotoboys((p) => [...p, MOTOBOY_NOVO(p.length + 1)]);
-  }
+  }, []);
 
-  function removeMotoboy() {
+  const removeMotoboy = reactExports.useCallback(() => {
     setMotoboys((p) => (p.length > 1 ? p.slice(0, -1) : p));
-  }
+  }, []);
 
   // ── Validação ──────────────────────────────────────────────
-  function validar() {
+  const validar = reactExports.useCallback(() => {
     const e = {};
 
     if (!salao.vendaSist || salao.vendaSist <= 0) {
@@ -188,10 +185,10 @@ function useFechamento() {
 
     setErros(e);
     return Object.keys(e).length === 0;
-  }
+  }, [salao.vendaSist, delivery.vendaWeb, delivery.vendaBundiA, delivery.vendaBundiB]);
 
   // ── Cálculo Principal ──────────────────────────────────────
-  async function calcular() {
+  const calcular = reactExports.useCallback(async () => {
     if (!validar()) return;
 
     const pixRetiradaAuto = salao.vendaRetirada - salao.pixRetirada;
@@ -252,17 +249,16 @@ function useFechamento() {
     setRelatorio(dados);
     setEtapa('resultado');
 
-    // Salva no servidor
     try {
       await criarFechamento(dados);
       toast?.('Fechamento salvo com sucesso!', 'ok');
     } catch {
       toast?.('Não foi possível salvar no servidor.', 'erro');
     }
-  }
+  }, [salao, delivery, motoboys, observacao, validar, toast]);
 
   // ── Copiar Imagem para Clipboard ───────────────────────────
-  async function copiarImagem() {
+  const copiarImagem = reactExports.useCallback(async () => {
     const el = conteudoRef.current;
     if (!el) return;
 
@@ -285,7 +281,6 @@ function useFechamento() {
           toast?.('Imagem copiada!', 'ok');
           setTimeout(() => setCopiado(false), 3000);
         } catch {
-          // Fallback: download
           const url = URL.createObjectURL(blob);
           Object.assign(document.createElement('a'), {
             href: url,
@@ -299,10 +294,10 @@ function useFechamento() {
     } catch {
       setCopiando(false);
     }
-  }
+  }, [toast]);
 
   // ── Novo Fechamento ───────────────────────────────────────
-  function novoFechamento() {
+  const novoFechamento = reactExports.useCallback(() => {
     setSalao(SALAO_VAZIO);
     setDelivery(DELIVERY_VAZIO);
     setMotoboys([MOTOBOY_NOVO(1)]);
@@ -316,7 +311,7 @@ function useFechamento() {
     try {
       sessionStorage.removeItem(STORAGE_KEY);
     } catch {}
-  }
+  }, []);
 
   return {
     // Estado
@@ -1298,7 +1293,7 @@ function FormularioFechamento({
   ] });
 }
 
-function LinhaCalculo({ sinal, label, value, destaque, hint }) {
+const LinhaCalculo = reactExports.memo(function LinhaCalculo2({ sinal, label, value, destaque, hint }) {
   const val = Number(value) || 0;
   const isZero = val === 0;
   const opacidade = isZero && !destaque ? "lc--zero" : "";
@@ -1317,8 +1312,8 @@ function LinhaCalculo({ sinal, label, value, destaque, hint }) {
       fmt(Math.abs(val))
     ] })
   ] });
-}
-function LinhaSoma({ label, value }) {
+});
+const LinhaSoma = reactExports.memo(function LinhaSoma2({ label, value }) {
   const val = Number(value) || 0;
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "lc-soma", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "lc-soma-label", children: label }),
@@ -1328,8 +1323,8 @@ function LinhaSoma({ label, value }) {
       fmt(val)
     ] })
   ] });
-}
-function RaioXSalao({ relatorio }) {
+});
+const RaioXSalao = reactExports.memo(function RaioXSalao2({ relatorio }) {
   const {
     sistSalao,
     vendaRetirada,
@@ -1412,8 +1407,8 @@ function RaioXSalao({ relatorio }) {
       ] })
     ] })
   ] });
-}
-function RaioXDelivery({ relatorio, motoboys }) {
+});
+const RaioXDelivery = reactExports.memo(function RaioXDelivery2({ relatorio, motoboys }) {
   const {
     vendaWeb,
     pixWeb,
@@ -1486,8 +1481,8 @@ function RaioXDelivery({ relatorio, motoboys }) {
       ] })
     ] })
   ] });
-}
-function ResultadoFechamento({
+});
+const ResultadoFechamento = reactExports.memo(function ResultadoFechamento2({
   resultadoRef,
   conteudoRef,
   relatorio,
@@ -1499,6 +1494,18 @@ function ResultadoFechamento({
   onNovoFechamento
 }) {
   const positivo = relatorio && Math.abs(relatorio.totalGeral) < 1;
+  const handleObservacao = reactExports.useCallback((e) => {
+    onObservacaoChange(e.target.value);
+  }, [onObservacaoChange]);
+  const handleImprimir = reactExports.useCallback(() => {
+    const meta = document.querySelector('meta[name="viewport"]');
+    const prev = meta?.content;
+    if (meta) meta.content = "width=device-width, initial-scale=1";
+    window.print();
+    if (meta && prev) setTimeout(() => {
+      meta.content = prev;
+    }, 500);
+  }, []);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { ref: resultadoRef, className: "fc-fade", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { ref: conteudoRef, className: "fc-resultado-wrap" }),
     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "raio-x-wrap", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "raio-x-painel raio-x-painel--aberto", children: [
@@ -1540,73 +1547,21 @@ function ResultadoFechamento({
           className: "fc-observacao-input",
           placeholder: "Ex: caixa com moedas separadas, entregador saiu mais cedo...",
           value: observacao,
-          onChange: (e) => onObservacaoChange(e.target.value),
+          onChange: handleObservacao,
           rows: 3
         }
       )
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "fc-acoes", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "btn btn--ghost", onClick: onVoltar, children: "← Voltar e editar" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "btn btn--copiar", onClick: () => {
-        const meta = document.querySelector('meta[name="viewport"]');
-        const prev = meta?.content;
-        if (meta) meta.content = "width=device-width, initial-scale=1";
-        window.print();
-        if (meta && prev) setTimeout(() => {
-          meta.content = prev;
-        }, 500);
-      }, children: "🖨️ Imprimir" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "btn btn--copiar", onClick: handleImprimir, children: "🖨️ Imprimir" }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "btn btn--ghost", onClick: onNovoFechamento, children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(IconRefresh, {}),
         " Novo fechamento"
       ] })
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("style", { children: `
-        .raio-x-wrap { margin: 16px 0 8px; }
-        .raio-x-painel--aberto {
-          padding: 16px;
-          background: rgba(255,255,255,0.03);
-          border: 1px solid rgba(255,255,255,0.10);
-          border-radius: 10px;
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-        }
-        .raio-x-intro { margin: 0; font-size: 0.8rem; color: #64748b; line-height: 1.5; }
-        .raio-x-separador { height: 1px; background: rgba(255,255,255,0.07); }
-        .raio-x-bloco { display: flex; flex-direction: column; gap: 14px; }
-        .raio-x-bloco--final {
-          padding: 14px;
-          background: rgba(255,255,255,0.03);
-          border: 1px solid rgba(255,255,255,0.08);
-          border-radius: 8px;
-        }
-        .raio-x-titulo { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 600; color: #cbd5e1; }
-        .raio-x-titulo svg { width: 16px; height: 16px; opacity: 0.7; }
-        .raio-x-passo { display: flex; flex-direction: column; gap: 6px; }
-        .raio-x-passo-label { font-size: 0.75rem; color: #64748b; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
-        .raio-x-passo--resultado .raio-x-passo-label { color: #94a3b8; }
-        .lc-equacao { background: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; }
-        .lc-linha { display: flex; align-items: baseline; gap: 6px; padding: 3px 0; font-size: 0.82rem; color: #94a3b8; transition: opacity 0.2s; }
-        .lc-linha--zero { opacity: 0.38; }
-        .lc-linha--destaque { color: #e2e8f0; font-weight: 500; }
-        .lc-sinal { width: 14px; text-align: center; flex-shrink: 0; color: #475569; font-weight: 600; font-size: 0.9rem; }
-        .lc-label { flex: 1; min-width: 0; }
-        .lc-hint { font-size: 0.72rem; color: #475569; font-style: italic; }
-        .lc-valor { font-variant-numeric: tabular-nums; font-weight: 500; white-space: nowrap; }
-        .lc-valor--neg { color: #f87171; }
-        .lc-soma { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.08); font-size: 0.85rem; font-weight: 600; }
-        .lc-soma-label { color: #cbd5e1; }
-        .lc-soma-valor { font-variant-numeric: tabular-nums; }
-        .lc-soma-valor--neg { color: #f87171; }
-        .lc-soma-valor--pos { color: #4ade80; }
-        .lc-soma-valor--zero { color: #4ade80; }
-        .raio-x-alerta { margin-top: 8px; padding: 10px 12px; background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.2); border-radius: 8px; font-size: 0.8rem; color: #fca5a5; line-height: 1.5; }
-        .raio-x-alerta--total { background: rgba(248,113,113,0.12); border-color: rgba(248,113,113,0.3); font-size: 0.85rem; }
-        .raio-x-ok { margin-top: 8px; padding: 10px 12px; background: rgba(74,222,128,0.07); border: 1px solid rgba(74,222,128,0.2); border-radius: 8px; font-size: 0.8rem; color: #86efac; line-height: 1.5; }
-      ` })
+    ] })
   ] });
-}
+});
 
 function Fechamento() {
   const {
