@@ -4,7 +4,7 @@
  * ~250 linhas - Reutilizável, testável
  */
 
-import React, { useLayoutEffect, useRef, useState, useEffect } from 'react';
+import React, { useLayoutEffect, useRef, useEffect } from 'react';
 import { Campo } from "../../components/Campo";
 import { CalcAuto } from "../../components/CalcAuto";
 import { IconStore, IconBike } from "../../components/Icons";
@@ -87,11 +87,10 @@ export function FormularioFechamento({
 
   function editarMotoboy(i, campo, val) {
     const next = [...motoboys];
-    // Aceita string enquanto o usuário digita (ex: "1,5"), converte no onBlur
     const parsed = campo === 'nome'
       ? val
       : (typeof val === 'string' && isNaN(Number(val.replace(',', '.'))))
-        ? val  // mantém string temporária durante digitação
+        ? val
         : campo === 'qtd'
           ? (parseInt(val) || 0)
           : (typeof val === 'number' ? val : (parseFloat(String(val).replace(',', '.')) || 0));
@@ -114,32 +113,49 @@ export function FormularioFechamento({
 
   const abaIdx = ABAS.findIndex((a) => a.id === aba);
 
-  // ── Ajusta altura do viewport para a altura do slide ativo ──
+  // ── Ajusta altura do viewport sem causar re-render ──────────
+  // Usa refs diretas ao invés de state para evitar re-renders durante animação.
+  // rAF garante que a medição acontece após o browser pintar o frame,
+  // e o debounce no ResizeObserver evita medir enquanto o slide ainda anima.
   const viewportRef = useRef(null);
-  const slideRefs = useRef([]);
-  const [altura, setAltura] = useState('auto');
+  const slideRefs   = useRef([]);
+  const rafRef      = useRef(null);
+
+  function medirAposTransicao() {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => {
+      const ativo = slideRefs.current[abaIdx];
+      if (viewportRef.current && ativo) {
+        viewportRef.current.style.height = `${ativo.scrollHeight}px`;
+      }
+    });
+  }
 
   useLayoutEffect(() => {
-    function medir() {
-      const ativo = slideRefs.current[abaIdx];
-      if (ativo) setAltura(`${ativo.scrollHeight}px`);
-    }
-    medir();
+    medirAposTransicao();
 
-    // Remede quando o conteúdo do slide ativo mudar (ex: + motoboy)
     const ativo = slideRefs.current[abaIdx];
     if (!ativo || typeof ResizeObserver === 'undefined') return;
-    const obs = new ResizeObserver(medir);
+
+    // Debounce de 100ms: só mede depois que o conteúdo parou de mudar,
+    // evitando disparos durante a animação do fc-track.
+    let debounce;
+    const obs = new ResizeObserver(() => {
+      clearTimeout(debounce);
+      debounce = setTimeout(medirAposTransicao, 100);
+    });
     obs.observe(ativo);
-    return () => obs.disconnect();
+
+    return () => {
+      obs.disconnect();
+      clearTimeout(debounce);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
   }, [abaIdx, motoboys.length, brendiAtivo]);
 
   // Remede em resize de janela
   useEffect(() => {
-    function onResize() {
-      const ativo = slideRefs.current[abaIdx];
-      if (ativo) setAltura(`${ativo.scrollHeight}px`);
-    }
+    function onResize() { medirAposTransicao(); }
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, [abaIdx]);
@@ -148,10 +164,10 @@ export function FormularioFechamento({
     <div className="fc-fade">
       <ToggleAbas aba={aba} onChange={onAbaChange} subtotais={subtotais} />
 
+      {/* height controlado via ref (sem state), eliminando re-renders durante transição */}
       <div
         className="fc-viewport"
         ref={viewportRef}
-        style={{ height: altura }}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
@@ -395,14 +411,12 @@ export function FormularioFechamento({
                             placeholder="0"
                             value={m[campo] || ''}
                             onChange={(e) => {
-                              // Trata ponto como vírgula para campos monetários no celular
                               const raw = campo === 'qtd'
                                 ? e.target.value.replace(/[^0-9]/g, '')
                                 : e.target.value.replace('.', ',').replace(/[^0-9,]/g, '');
                               editarMotoboy(i, campo, raw);
                             }}
                             onBlur={(e) => {
-                              // Ao sair do campo, converte para número
                               const num = campo === 'qtd'
                                 ? parseInt(e.target.value) || 0
                                 : parse(e.target.value);

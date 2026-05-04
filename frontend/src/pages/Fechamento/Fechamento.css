@@ -79,7 +79,8 @@
   width: 100%;
   overflow: hidden;
   border-radius: 15px;
-  transition: height 0.3s cubic-bezier(0.4,0,0.2,1);
+  /* Sem transition de height: evita reflow no desktop durante a animação do fc-track.
+     A altura muda instantaneamente via JS (ref), só o transform anima. */
 }
 
 .fc-track {
@@ -87,6 +88,7 @@
   width: 200%;
   align-items: flex-start;
   transition: transform 0.32s cubic-bezier(0.4,0,0.2,1);
+  will-change: transform; /* promove para camada GPU, elimina jank no desktop */
 }
 
 .fc-slide {
@@ -450,6 +452,18 @@
   color: var(--c-deliv);
 }
 
+/* ── Resultado ── */
+.fc-resultado-wrap {
+  background: rgba(10,16,30,0.98);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
 /* ── Hero resultado ── */
 .fc-hero {
   border-radius: 18px;
@@ -641,7 +655,7 @@
 /* ── Impressão ───────────────────────────────────────────────── */
 @media print {
   @page {
-    size: 80mm auto;   /* térmica 80mm, altura automática */
+    size: 80mm auto;
     margin: 4mm 3mm;
   }
 
@@ -655,7 +669,7 @@
     overflow: visible !important;
     background: #fff !important;
     color: #111 !important;
-    font-size: 11px !important; /* legível na térmica */
+    font-size: 11px !important;
   }
 
   /* ── Ocultar elementos de UI ── */
