@@ -4,12 +4,87 @@
  * ~250 linhas - Reutilizável, testável
  */
 
-import React, { useLayoutEffect, useRef, useEffect } from 'react';
+import React, { useState, useLayoutEffect, useRef, useEffect } from 'react';
 import { Campo } from "../../components/Campo";
 import { CalcAuto } from "../../components/CalcAuto";
 import { IconStore, IconBike } from "../../components/Icons";
 import { fmt, parse } from "../../lib/format";
 import { MotoboyNomeInput } from "../../components/MotoboyNomeInput";
+
+// ── Input monetário isolado com estado local de display ──────
+// Replica exatamente a lógica do Campo: display local (string) durante
+// a digitação, parse para número no onChange, fmt no blur/fora do foco.
+function MotoboyInputMonetario({ value, onChange }) {
+  const [focused, setFocused] = useState(false);
+  const [display, setDisplay] = useState('');
+
+  useEffect(() => {
+    if (!focused) setDisplay(value ? fmt(value) : '');
+  }, [value, focused]);
+
+  return (
+    <input
+      type="text"
+      inputMode="decimal"
+      placeholder="0,00"
+      value={display}
+      onFocus={() => {
+        setFocused(true);
+        setDisplay(value ? String(value).replace('.', ',') : '');
+      }}
+      onChange={(e) => {
+        const raw = e.target.value.replace('.', ',');
+        setDisplay(raw);
+        onChange(parse(raw));
+      }}
+      onBlur={() => {
+        setFocused(false);
+        setDisplay(value ? fmt(value) : '');
+      }}
+    />
+  );
+}
+
+// ── Card de motoboy com inputs isolados ──────────────────────
+function MotoboyCard({ motoboy: m, index: i, onNomeChange, onCampoChange }) {
+  return (
+    <div className="motoboy-card">
+      <div className="motoboy-topo">
+        <div className="motoboy-avatar">
+          {m.nome.charAt(0).toUpperCase()}
+        </div>
+        <MotoboyNomeInput
+          value={m.nome}
+          placeholder={`Entregador ${i + 1}`}
+          onChange={onNomeChange}
+        />
+      </div>
+      <div className="motoboy-campos">
+        <div className="motoboy-campo">
+          <span>Entregas</span>
+          <input
+            type="text"
+            inputMode="numeric"
+            placeholder="0"
+            value={m.qtd || ''}
+            onChange={(e) => {
+              const raw = e.target.value.replace(/[^0-9]/g, '');
+              onCampoChange('qtd', parseInt(raw) || 0);
+            }}
+          />
+        </div>
+        <div className="motoboy-campo">
+          <span>Maquininha</span>
+          <MotoboyInputMonetario value={m.maq} onChange={(v) => onCampoChange('maq', v)} />
+        </div>
+        <div className="motoboy-campo">
+          <span>Dinheiro</span>
+          <MotoboyInputMonetario value={m.din} onChange={(v) => onCampoChange('din', v)} />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const ABAS = [
   { id: 'salao', label: 'Salão', Icon: IconStore },
@@ -386,47 +461,13 @@ export function FormularioFechamento({
                 </div>
 
                 {motoboys.map((m, i) => (
-                  <div key={i} className="motoboy-card">
-                    <div className="motoboy-topo">
-                      <div className="motoboy-avatar">
-                        {m.nome.charAt(0).toUpperCase()}
-                      </div>
-                      <MotoboyNomeInput
-                        value={m.nome}
-                        placeholder={`Entregador ${i + 1}`}
-                        onChange={(v) => editarMotoboy(i, 'nome', v)}
-                      />
-                    </div>
-                    <div className="motoboy-campos">
-                      {[
-                        ['qtd', 'Entregas'],
-                        ['maq', 'Maquininha'],
-                        ['din', 'Dinheiro'],
-                      ].map(([campo, lbl]) => (
-                        <div key={campo} className="motoboy-campo">
-                          <span>{lbl}</span>
-                          <input
-                            type="text"
-                            inputMode={campo === 'qtd' ? 'numeric' : 'decimal'}
-                            placeholder="0"
-                            value={m[campo] || ''}
-                            onChange={(e) => {
-                              const raw = campo === 'qtd'
-                                ? e.target.value.replace(/[^0-9]/g, '')
-                                : e.target.value.replace('.', ',').replace(/[^0-9,]/g, '');
-                              editarMotoboy(i, campo, raw);
-                            }}
-                            onBlur={(e) => {
-                              const num = campo === 'qtd'
-                                ? parseInt(e.target.value) || 0
-                                : parse(e.target.value);
-                              editarMotoboy(i, campo, num);
-                            }}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  <MotoboyCard
+                    key={i}
+                    motoboy={m}
+                    index={i}
+                    onNomeChange={(v) => editarMotoboy(i, 'nome', v)}
+                    onCampoChange={(campo, num) => editarMotoboy(i, campo, num)}
+                  />
                 ))}
               </div>
             </div>
