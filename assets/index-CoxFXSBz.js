@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/Login-BNH66Bzc.js","assets/vendor-jF1s2-c6.js","assets/supabase-1T9tw6ve.js","assets/Login-CwkpzoRI.css","assets/Fechamento-CBoLAvKs.js","assets/format-CcxP-_eH.js","assets/Fechamento-BW6vmn4F.css","assets/Historico-imhF7uu9.js","assets/Historico-jpdBEvQk.css","assets/Plano-D8lRRKdC.js","assets/Plano-XQq3oUCK.css","assets/Equipe-Dc2CYdJ-.js","assets/Equipe-Cm_FHM0f.css","assets/RedefinirSenha-Bsu-I34p.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/Login-nn8W1LGF.js","assets/vendor-jF1s2-c6.js","assets/supabase-1T9tw6ve.js","assets/Login-CwkpzoRI.css","assets/Fechamento-B7u7j1iA.js","assets/format-CcxP-_eH.js","assets/Fechamento-BW6vmn4F.css","assets/Historico-B_tSxbBp.js","assets/Historico-jpdBEvQk.css","assets/Plano-XxSUGeRb.js","assets/Plano-XQq3oUCK.css","assets/Equipe-BPTeIaTu.js","assets/Equipe-Cm_FHM0f.css","assets/RedefinirSenha-DLMI4E82.js"])))=>i.map(i=>d[i]);
 import { r as reactExports, j as jsxRuntimeExports, R as React, u as useNavigate, a as useLocation, b as reactDomExports, H as HashRouter, c as Routes, d as Route, N as Navigate, e as ReactDOM } from './vendor-jF1s2-c6.js';
 import { c as createClient } from './supabase-1T9tw6ve.js';
 
@@ -207,7 +207,7 @@ async function registrar(email, password, nome) {
     password,
     options: {
       data: { nome, perfil: 'gerente' },
-      emailRedirectTo: 'https://brenao28.github.io/Big-Burguer/#/login',
+      emailRedirectTo: 'https://brenaorm.github.io/retail-pos-system/#/login',
     },
   });
   if (error) throw error;
@@ -223,7 +223,7 @@ async function logout() {
 /** Recuperação de senha por email */
 async function recuperarSenha(email) {
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: 'https://brenao28.github.io/Big-Burguer/auth-redirect.html',
+    redirectTo: 'https://brenaorm.github.io/retail-pos-system/auth-redirect.html',
   });
   if (error) throw error;
 }
@@ -356,12 +356,12 @@ async function removerEntregador(id) {
   if (error) throw error;
 }
 
-const Login = reactExports.lazy(() => __vitePreload(() => import('./Login-BNH66Bzc.js'),true              ?__vite__mapDeps([0,1,2,3]):void 0));
-const Fechamento = reactExports.lazy(() => __vitePreload(() => import('./Fechamento-CBoLAvKs.js'),true              ?__vite__mapDeps([4,1,5,2,6]):void 0));
-const Historico = reactExports.lazy(() => __vitePreload(() => import('./Historico-imhF7uu9.js'),true              ?__vite__mapDeps([7,1,5,2,8]):void 0));
-const Plano = reactExports.lazy(() => __vitePreload(() => import('./Plano-D8lRRKdC.js'),true              ?__vite__mapDeps([9,1,2,10]):void 0));
-const Equipe = reactExports.lazy(() => __vitePreload(() => import('./Equipe-Dc2CYdJ-.js'),true              ?__vite__mapDeps([11,1,2,12]):void 0));
-const RedefinirSenha = reactExports.lazy(() => __vitePreload(() => import('./RedefinirSenha-Bsu-I34p.js'),true              ?__vite__mapDeps([13,1,2,3]):void 0));
+const Login = reactExports.lazy(() => __vitePreload(() => import('./Login-nn8W1LGF.js'),true              ?__vite__mapDeps([0,1,2,3]):void 0));
+const Fechamento = reactExports.lazy(() => __vitePreload(() => import('./Fechamento-B7u7j1iA.js'),true              ?__vite__mapDeps([4,1,5,2,6]):void 0));
+const Historico = reactExports.lazy(() => __vitePreload(() => import('./Historico-B_tSxbBp.js'),true              ?__vite__mapDeps([7,1,5,2,8]):void 0));
+const Plano = reactExports.lazy(() => __vitePreload(() => import('./Plano-XxSUGeRb.js'),true              ?__vite__mapDeps([9,1,2,10]):void 0));
+const Equipe = reactExports.lazy(() => __vitePreload(() => import('./Equipe-BPTeIaTu.js'),true              ?__vite__mapDeps([11,1,2,12]):void 0));
+const RedefinirSenha = reactExports.lazy(() => __vitePreload(() => import('./RedefinirSenha-DLMI4E82.js'),true              ?__vite__mapDeps([13,1,2,3]):void 0));
 const ToastContext = React.createContext(null);
 function ToastProvider({ children }) {
   const [toasts, setToasts] = reactExports.useState([]);

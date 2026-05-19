@@ -1,5 +1,5 @@
 import { r as reactExports, j as jsxRuntimeExports } from './vendor-jF1s2-c6.js';
-import { u as useAuth, g as criarAssinaturaMp } from './index-BzZEWFWb.js';
+import { u as useAuth, g as criarAssinaturaMp } from './index-CoxFXSBz.js';
 import './supabase-1T9tw6ve.js';
 
 function Plano() {
